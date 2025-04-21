@@ -40,6 +40,10 @@ namespace MediaTekDocuments.dal
         /// méthode HTTP pour update
         /// </summary>
         private const string PUT = "PUT";
+        /// <summary>
+        /// méthode HTTP pour DELETE
+        /// </summary>
+        private const string DELETE = "DELETE";
 
         /// <summary>
         /// Méthode privée pour créer un singleton
@@ -287,7 +291,7 @@ namespace MediaTekDocuments.dal
                 string json = JsonConvert.SerializeObject(new { id = id });
                 string parametres = "champs=" + json;
                 
-                JObject retour = api.RecupDistant("DELETE", document, parametres);
+                JObject retour = api.RecupDistant(DELETE, document, parametres);
                 
                 string code = (string)retour["code"];
                 return code == "200";                
