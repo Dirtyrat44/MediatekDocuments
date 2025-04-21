@@ -45,6 +45,80 @@ namespace MediaTekDocuments.view
                 cbx.SelectedIndex = -1;
             }
         }
+
+        /// <summary>
+        /// Ajoute deux colonnes modifier et supprimer à DataGridView,
+        /// si elles n'existent pas déjà.
+        /// </summary>
+        public void AjouterBoutons(DataGridView dgv)
+        {
+            if (dgv.Columns["Modifier"] == null)
+            {
+                DataGridViewButtonColumn btnModifier = new DataGridViewButtonColumn
+                {
+                    HeaderText = "",
+                    Name = "Modifier",
+                    Text = " Modifier ",
+                    UseColumnTextForButtonValue = true,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                dgv.Columns.Add(btnModifier);
+            }
+
+            if (dgv.Columns["Supprimer"] == null)
+            {
+                DataGridViewButtonColumn btnSupprimer = new DataGridViewButtonColumn
+                {
+                    HeaderText = "",
+                    Name = "Supprimer",
+                    Text = " X ",
+                    UseColumnTextForButtonValue = true,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                dgv.Columns.Add(btnSupprimer);
+            }
+
+            int lastIndex = dgv.Columns.Count - 1;
+            dgv.Columns["Supprimer"].DisplayIndex = lastIndex;
+            dgv.Columns["Modifier"].DisplayIndex = lastIndex - 1;
+        }
+
+        /// <summary>
+        /// Recharge toutes les collections et rafraîchit les trois grilles.
+        /// </summary>
+        private void RefreshAllLists()
+        {
+            lesRevues = controller.GetAllRevues();
+            lesLivres = controller.GetAllLivres();
+            lesDvd = controller.GetAllDvd();
+            
+            RemplirRevuesListe(lesRevues);
+            RemplirLivresListe(lesLivres);
+            RemplirDvdListe(lesDvd);
+        }
+
+        /// <summary>
+        /// Intercepte la sélection de l'onglet nouveau document
+        /// Annule la navigation vers l'onglet
+        /// Ouvre la fenêtre de création d'un document
+        /// Si tout s'est bien passé, rafraîchit la liste
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabOngletsApplication_Selecting(object sender, TabControlCancelEventArgs e)
+        {
+            if (e.TabPage == tabAdd)
+            {
+                e.Cancel = true;
+                FrmDocEdit frmEdit = new FrmDocEdit(this.controller);
+
+                if (frmEdit.ShowDialog() == DialogResult.OK)
+                {
+                    RefreshAllLists();
+                }
+            }
+        }
+
         #endregion
 
         #region Onglet Livres
@@ -56,7 +130,7 @@ namespace MediaTekDocuments.view
         /// appel des méthodes pour remplir le datagrid des livres et des combos (genre, rayon, public)
         /// </summary>
         /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="e"></param> 
         private void TabLivres_Enter(object sender, EventArgs e)
         {
             lesLivres = controller.GetAllLivres();
@@ -82,6 +156,9 @@ namespace MediaTekDocuments.view
             dgvLivresListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvLivresListe.Columns["id"].DisplayIndex = 0;
             dgvLivresListe.Columns["titre"].DisplayIndex = 1;
+            dgvLivresListe.Columns["auteur"].DisplayIndex = 2;
+            dgvLivresListe.Columns["collection"].DisplayIndex = 3;
+            AjouterBoutons(dgvLivresListe);
         }
 
         /// <summary>
@@ -357,9 +434,48 @@ namespace MediaTekDocuments.view
                 case "Rayon":
                     sortedList = lesLivres.OrderBy(o => o.Rayon).ToList();
                     break;
+                default:
+                    return;
             }
             RemplirLivresListe(sortedList);
         }
+
+        /// <summary>
+        /// Gère les clics sur les boutons Modifier et Supprimer dans la grille des livres
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvLivresListe_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView dgv = (DataGridView)sender;
+            string colName = dgv.Columns[e.ColumnIndex].Name;
+            Livre livreSelectionne = (Livre)dgv.Rows[e.RowIndex].DataBoundItem;
+
+            if (colName == "Modifier")
+            {
+                FrmDocEdit frmEdit = new FrmDocEdit(this.controller, livreSelectionne);
+                if (frmEdit.ShowDialog() == DialogResult.OK)
+                {
+                    RefreshAllLists();
+                }                
+            }
+            else if (colName == "Supprimer")
+            {
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + livreSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (res == DialogResult.Yes)
+                {
+                    bool result = controller.DeleteDocument(livreSelectionne.Id, "livre");
+                    if (!result)
+                    {
+                        MessageBox.Show("Impossible de supprimer " + livreSelectionne.Titre + ", il est lié à une commande ou un exemplaire.", "Erreur : suppression impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    RefreshAllLists();
+                }
+            }
+        }
+
         #endregion
 
         #region Onglet Dvd
@@ -389,14 +505,6 @@ namespace MediaTekDocuments.view
         {
             bdgDvdListe.DataSource = Dvds;
             dgvDvdListe.DataSource = bdgDvdListe;
-            dgvDvdListe.Columns["idRayon"].Visible = false;
-            dgvDvdListe.Columns["idGenre"].Visible = false;
-            dgvDvdListe.Columns["idPublic"].Visible = false;
-            dgvDvdListe.Columns["image"].Visible = false;
-            dgvDvdListe.Columns["synopsis"].Visible = false;
-            dgvDvdListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgvDvdListe.Columns["id"].DisplayIndex = 0;
-            dgvDvdListe.Columns["titre"].DisplayIndex = 1;
         }
 
         /// <summary>
@@ -588,6 +696,31 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
+        /// Evénement pour le DataGridView DVD
+        /// Masque les colonnes inutiles et ajout des boutons modifier et supprimer
+        /// Permet d'organiser les colonnes dans le bon ordre
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvDvdListe_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            dgvDvdListe.Columns["idRayon"].Visible = false;
+            dgvDvdListe.Columns["idGenre"].Visible = false;
+            dgvDvdListe.Columns["idPublic"].Visible = false;
+            dgvDvdListe.Columns["image"].Visible = false;
+            dgvDvdListe.Columns["synopsis"].Visible = false;
+
+            dgvDvdListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+            dgvDvdListe.Columns["id"].DisplayIndex = 0;
+            dgvDvdListe.Columns["titre"].DisplayIndex = 1;
+            dgvDvdListe.Columns["realisateur"].DisplayIndex = 2;
+            dgvDvdListe.Columns["duree"].DisplayIndex = 3;
+
+            AjouterBoutons(dgvDvdListe);
+        }
+
+        /// <summary>
         /// Sur le clic du bouton d'annulation, affichage de la liste complète des Dvd
         /// </summary>
         /// <param name="sender"></param>
@@ -672,9 +805,48 @@ namespace MediaTekDocuments.view
                 case "Rayon":
                     sortedList = lesDvd.OrderBy(o => o.Rayon).ToList();
                     break;
+                default:
+                    return;
             }
             RemplirDvdListe(sortedList);
         }
+
+        /// <summary>
+        /// Gère les clics sur les boutons Modifier et Supprimer dans la grille des DVD
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvDvdListe_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView dgv = (DataGridView)sender;
+            string colName = dgv.Columns[e.ColumnIndex].Name;
+            Dvd dvdSelectionne = (Dvd)dgv.Rows[e.RowIndex].DataBoundItem;
+
+            if (colName == "Modifier")
+            {
+                FrmDocEdit frmEdit = new FrmDocEdit(this.controller, dvdSelectionne);
+                if (frmEdit.ShowDialog() == DialogResult.OK)
+                {
+                    RefreshAllLists();
+                }                
+            }
+            else if (colName == "Supprimer")
+            {
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + dvdSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (res == DialogResult.Yes)
+                {
+                    bool result = controller.DeleteDocument(dvdSelectionne.Id, "dvd");
+                    if (!result)
+                    {
+                        MessageBox.Show("Impossible de supprimer " + dvdSelectionne.Titre + ", il est lié à une commande ou un exemplaire.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    RefreshAllLists();
+                }
+            }
+        }
+
         #endregion
 
         #region Onglet Revues
@@ -702,15 +874,8 @@ namespace MediaTekDocuments.view
         /// <param name="revues"></param>
         private void RemplirRevuesListe(List<Revue> revues)
         {
-            bdgRevuesListe.DataSource = revues;
-            dgvRevuesListe.DataSource = bdgRevuesListe;
-            dgvRevuesListe.Columns["idRayon"].Visible = false;
-            dgvRevuesListe.Columns["idGenre"].Visible = false;
-            dgvRevuesListe.Columns["idPublic"].Visible = false;
-            dgvRevuesListe.Columns["image"].Visible = false;
-            dgvRevuesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgvRevuesListe.Columns["id"].DisplayIndex = 0;
-            dgvRevuesListe.Columns["titre"].DisplayIndex = 1;
+            bdgRevuesListe.DataSource = revues;            
+            dgvRevuesListe.DataSource = bdgRevuesListe;            
         }
 
         /// <summary>
@@ -900,6 +1065,27 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
+        /// Evénement pour le DataGridView Revue
+        /// Masque les colonnes inutiles et ajout des boutons modifier et supprimer
+        /// Permet d'organiser les colonnes dans le bon ordre
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvRevuesListe_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
+        {
+            dgvRevuesListe.Columns["idRayon"].Visible = false;
+            dgvRevuesListe.Columns["idGenre"].Visible = false;
+            dgvRevuesListe.Columns["idPublic"].Visible = false;
+            dgvRevuesListe.Columns["image"].Visible = false;
+            dgvRevuesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dgvRevuesListe.Columns["id"].DisplayIndex = 0;
+            dgvRevuesListe.Columns["titre"].DisplayIndex = 1;
+            dgvRevuesListe.Columns["periodicite"].DisplayIndex = 2;
+            dgvRevuesListe.Columns["delaiMiseADispo"].DisplayIndex = 3;
+            AjouterBoutons(dgvRevuesListe);
+        }
+
+        /// <summary>
         /// Sur le clic du bouton d'annulation, affichage de la liste complète des revues
         /// </summary>
         /// <param name="sender"></param>
@@ -984,9 +1170,48 @@ namespace MediaTekDocuments.view
                 case "Rayon":
                     sortedList = lesRevues.OrderBy(o => o.Rayon).ToList();
                     break;
+                default:
+                    return;
             }
             RemplirRevuesListe(sortedList);
         }
+
+        /// <summary>
+        /// Gère les clics sur les boutons Modifier et Supprimer dans la grille des Revues
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvRevuesListe_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            DataGridView dgv = (DataGridView)sender;
+            string colName = dgv.Columns[e.ColumnIndex].Name;
+            Revue revueSelectionne = (Revue)dgv.Rows[e.RowIndex].DataBoundItem;
+
+            if (colName == "Modifier")
+            {
+                FrmDocEdit frmEdit = new FrmDocEdit(this.controller, revueSelectionne);
+                if (frmEdit.ShowDialog() == DialogResult.OK)
+                {
+                    RefreshAllLists();
+                }                
+            }
+            else if (colName == "Supprimer")
+            {
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + revueSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (res == DialogResult.Yes)
+                {
+                    bool result = controller.DeleteDocument(revueSelectionne.Id, "revue");
+                    if (!result)
+                    {
+                        MessageBox.Show("Impossible de supprimer " + revueSelectionne.Titre + ", il est lié à une commande ou un exemplaire.", "Erreur : suppression impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    RefreshAllLists();
+                }
+            }
+        }
+
         #endregion
 
         #region Onglet Paarutions
@@ -1239,5 +1464,6 @@ namespace MediaTekDocuments.view
             }
         }
         #endregion
+
     }
 }

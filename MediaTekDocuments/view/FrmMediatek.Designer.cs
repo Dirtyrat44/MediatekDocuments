@@ -178,6 +178,7 @@ namespace MediaTekDocuments.view
             this.label53 = new System.Windows.Forms.Label();
             this.label54 = new System.Windows.Forms.Label();
             this.btnReceptionRechercher = new System.Windows.Forms.Button();
+            this.tabAdd = new System.Windows.Forms.TabPage();
             this.tabOngletsApplication.SuspendLayout();
             this.tabLivres.SuspendLayout();
             this.grpLivresInfos.SuspendLayout();
@@ -209,6 +210,7 @@ namespace MediaTekDocuments.view
             this.tabOngletsApplication.Controls.Add(this.tabDvd);
             this.tabOngletsApplication.Controls.Add(this.tabRevues);
             this.tabOngletsApplication.Controls.Add(this.tabReceptionRevue);
+            this.tabOngletsApplication.Controls.Add(this.tabAdd);
             this.tabOngletsApplication.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabOngletsApplication.ItemSize = new System.Drawing.Size(49, 18);
             this.tabOngletsApplication.Location = new System.Drawing.Point(0, 0);
@@ -216,6 +218,7 @@ namespace MediaTekDocuments.view
             this.tabOngletsApplication.SelectedIndex = 0;
             this.tabOngletsApplication.Size = new System.Drawing.Size(883, 659);
             this.tabOngletsApplication.TabIndex = 0;
+            this.tabOngletsApplication.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabOngletsApplication_Selecting);
             // 
             // tabLivres
             // 
@@ -594,6 +597,7 @@ namespace MediaTekDocuments.view
             this.dgvLivresListe.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvLivresListe.Size = new System.Drawing.Size(844, 200);
             this.dgvLivresListe.TabIndex = 4;
+            this.dgvLivresListe.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvLivresListe_CellContentClick);
             this.dgvLivresListe.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.DgvLivresListe_ColumnHeaderMouseClick);
             this.dgvLivresListe.SelectionChanged += new System.EventHandler(this.DgvLivresListe_SelectionChanged);
             // 
@@ -995,7 +999,9 @@ namespace MediaTekDocuments.view
             this.dgvDvdListe.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvDvdListe.Size = new System.Drawing.Size(844, 200);
             this.dgvDvdListe.TabIndex = 4;
+            this.dgvDvdListe.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDvdListe_CellContentClick);
             this.dgvDvdListe.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvDvdListe_ColumnHeaderMouseClick);
+            this.dgvDvdListe.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgvDvdListe_DataBindingComplete);
             this.dgvDvdListe.SelectionChanged += new System.EventHandler(this.dgvDvdListe_SelectionChanged);
             // 
             // label42
@@ -1374,7 +1380,9 @@ namespace MediaTekDocuments.view
             this.dgvRevuesListe.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvRevuesListe.Size = new System.Drawing.Size(844, 200);
             this.dgvRevuesListe.TabIndex = 4;
+            this.dgvRevuesListe.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvRevuesListe_CellContentClick);
             this.dgvRevuesListe.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvRevuesListe_ColumnHeaderMouseClick);
+            this.dgvRevuesListe.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgvRevuesListe_DataBindingComplete);
             this.dgvRevuesListe.SelectionChanged += new System.EventHandler(this.dgvRevuesListe_SelectionChanged);
             // 
             // label34
@@ -1776,6 +1784,15 @@ namespace MediaTekDocuments.view
             this.btnReceptionRechercher.UseVisualStyleBackColor = true;
             this.btnReceptionRechercher.Click += new System.EventHandler(this.btnReceptionRechercher_Click);
             // 
+            // tabAdd
+            // 
+            this.tabAdd.BackColor = System.Drawing.Color.Transparent;
+            this.tabAdd.Location = new System.Drawing.Point(4, 22);
+            this.tabAdd.Name = "tabAdd";
+            this.tabAdd.Size = new System.Drawing.Size(875, 633);
+            this.tabAdd.TabIndex = 5;
+            this.tabAdd.Text = "+ Ajouter un document";
+            // 
             // FrmMediatek
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1970,6 +1987,8 @@ namespace MediaTekDocuments.view
         private System.Windows.Forms.Label label57;
         private System.Windows.Forms.Label label58;
         private System.Windows.Forms.Label label59;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.TabPage tabAdd;
     }
 }
 

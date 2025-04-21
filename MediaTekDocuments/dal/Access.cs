@@ -7,6 +7,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Linq;
+using System.Diagnostics;
 
 namespace MediaTekDocuments.dal
 {
@@ -37,6 +38,8 @@ namespace MediaTekDocuments.dal
         private const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
+        /// </summary>
+        private const string PUT = "PUT";
 
         /// <summary>
         /// Méthode privée pour créer un singleton
@@ -244,5 +247,56 @@ namespace MediaTekDocuments.dal
             }
         }
 
+        /// <summary>
+        /// Ajoute ou modifie un document
+        /// </summary>
+        /// <param name="doc">L'objet (Livre, dvd, revue)</param>
+        /// <param name="isNew">True = POST, false = PUT</param>
+        /// <returns>Code 200 si true</returns>
+        public bool addSaveDocument(string ressource, object doc, bool isNew)
+        {
+            string json = JsonConvert.SerializeObject(doc);
+            string parameters = "champs=" + json;
+            string message = isNew ? POST : PUT;
+
+            try
+            {
+                JObject retour = api.RecupDistant(message, ressource, parameters);
+                string code = (string)retour["code"];                
+                return code == "200";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Supprime un document dans la BDD via l'API
+        /// Envoie une requête DELETE avec le champ "id" dans le body
+        /// </summary>
+        /// <param name="idDvd">Identifiant du document à supprimer</param>
+        /// <returns>
+        /// True si la suppression marche sinon false
+        /// </returns>
+        public bool DeleteDocument(string id, string document)
+        {
+            try
+            {                
+                string json = JsonConvert.SerializeObject(new { id = id });
+                string parametres = "champs=" + json;
+                
+                JObject retour = api.RecupDistant("DELETE", document, parametres);
+                
+                string code = (string)retour["code"];
+                return code == "200";                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
+        }
     }
 }

@@ -96,5 +96,20 @@ namespace MediaTekDocuments.controller
         {
             return access.CreerExemplaire(exemplaire);
         }
+
+        public bool DeleteDocument(string id, string document)
+        {
+            return access.DeleteDocument(id, document);
+        }
+
+            /// <summary>
+            /// Crée ou met à jour un document quel que soit son type.
+            /// </summary>
+            public bool addSaveDocument(string ressource, object payload, bool isNew)
+            {
+                return access.addSaveDocument(ressource, payload, isNew);
+            }
+        
+
     }
 }
