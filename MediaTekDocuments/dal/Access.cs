@@ -137,6 +137,27 @@ namespace MediaTekDocuments.dal
             return lesRevues;
         }
 
+        /// <summary>
+        /// Retourne les différents status suivi
+        /// </summary>
+        /// <returns>Liste d'objets Revue</returns>
+        public List<Suivi> GetAllSuivis()
+        {
+            List<Suivi> lesSuivis = TraitementRecup<Suivi>(GET, "suivi", null);
+            return lesSuivis;
+        }
+
+        /// <summary>
+        /// 
+        /// Retourne la liste fusionnée de commande et commande document à partir de la BDD
+        /// </summary>
+        /// <returns>Liste d'objets commandeDto</returns>
+        public List<CommandeDto> GetAllCompleteCommandes(string id)
+        {
+            String jsonId = convertToJson("id", id);
+            List<CommandeDto> lesCommandes = TraitementRecup<CommandeDto>(GET, "commandecomplete/" + jsonId, null);
+            return lesCommandes;
+        }
 
         /// <summary>
         /// Retourne les exemplaires d'une revue
@@ -257,15 +278,15 @@ namespace MediaTekDocuments.dal
         /// <param name="doc">L'objet (Livre, dvd, revue)</param>
         /// <param name="isNew">True = POST, false = PUT</param>
         /// <returns>Code 200 si true</returns>
-        public bool addSaveDocument(string ressource, object doc, bool isNew)
+        public bool addUpdateDocument(string ressource, object doc, bool isNew)
         {
             string json = JsonConvert.SerializeObject(doc);
             string parameters = "champs=" + json;
-            string message = isNew ? POST : PUT;
+            string methode = isNew ? POST : PUT;
 
             try
             {
-                JObject retour = api.RecupDistant(message, ressource, parameters);
+                JObject retour = api.RecupDistant(methode, ressource, parameters);
                 string code = (string)retour["code"];                
                 return code == "200";
             }
@@ -280,7 +301,7 @@ namespace MediaTekDocuments.dal
         /// Supprime un document dans la BDD via l'API
         /// Envoie une requête DELETE avec le champ "id" dans le body
         /// </summary>
-        /// <param name="idDvd">Identifiant du document à supprimer</param>
+        /// <param name="">Identifiant du document à supprimer</param>
         /// <returns>
         /// True si la suppression marche sinon false
         /// </returns>

@@ -341,7 +341,7 @@ namespace MediaTekDocuments.view
             object payload = documentInfo.payload;
 
             // Appel API
-            bool success = controller.addSaveDocument(type, payload, isNew);
+            bool success = controller.addUpdateDocument(type, payload, isNew);
 
             if (!success)
             {

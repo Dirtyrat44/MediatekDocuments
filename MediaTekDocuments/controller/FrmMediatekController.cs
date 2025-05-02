@@ -68,6 +68,15 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// getter sur suivis
+        /// </summary>
+        /// <returns>Liste d'objets Suivi</returns>
+        public List<Suivi> GetAllSuivis()
+        {
+            return access.GetAllSuivis();
+        }
+
+        /// <summary>
         /// getter sur les publics
         /// </summary>
         /// <returns>Liste d'objets Public</returns>
@@ -76,13 +85,21 @@ namespace MediaTekDocuments.controller
             return access.GetAllPublics();
         }
 
-
         /// <summary>
-        /// récupère les exemplaires d'une revue
+        /// getter sur la liste fusionnée de commande et commandedocument
         /// </summary>
-        /// <param name="idDocuement">id de la revue concernée</param>
-        /// <returns>Liste d'objets Exemplaire</returns>
-        public List<Exemplaire> GetExemplairesRevue(string idDocuement)
+        /// <returns>Liste d'objets commandes</returns>
+        public List<CommandeDto> GetAllCompleteCommandes(string id)
+        {
+            return access.GetAllCompleteCommandes(id);
+        }
+
+            /// <summary>
+            /// récupère les exemplaires d'une revue
+            /// </summary>
+            /// <param name="idDocuement">id de la revue concernée</param>
+            /// <returns>Liste d'objets Exemplaire</returns>
+            public List<Exemplaire> GetExemplairesRevue(string idDocuement)
         {
             return access.GetExemplairesRevue(idDocuement);
         }
@@ -105,9 +122,9 @@ namespace MediaTekDocuments.controller
             /// <summary>
             /// Crée ou met à jour un document quel que soit son type.
             /// </summary>
-            public bool addSaveDocument(string ressource, object payload, bool isNew)
+            public bool addUpdateDocument(string ressource, object payload, bool isNew)
             {
-                return access.addSaveDocument(ressource, payload, isNew);
+                return access.addUpdateDocument(ressource, payload, isNew);
             }
         
 

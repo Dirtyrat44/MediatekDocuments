@@ -90,7 +90,7 @@ namespace MediaTekDocuments.view
         {
             lesRevues = controller.GetAllRevues();
             lesLivres = controller.GetAllLivres();
-            lesDvd = controller.GetAllDvd();
+            lesDvd = controller.GetAllDvd();            
             
             RemplirRevuesListe(lesRevues);
             RemplirLivresListe(lesLivres);
@@ -463,7 +463,7 @@ namespace MediaTekDocuments.view
             }
             else if (colName == "Supprimer")
             {
-                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + livreSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + livreSelectionne.Titre + "?", "Confirmation de suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
                 if (res == DialogResult.Yes)
                 {
                     bool result = controller.DeleteDocument(livreSelectionne.Id, "livre");
@@ -834,7 +834,7 @@ namespace MediaTekDocuments.view
             }
             else if (colName == "Supprimer")
             {
-                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + dvdSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + dvdSelectionne.Titre + "?", "Confirm", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
                 if (res == DialogResult.Yes)
                 {
                     bool result = controller.DeleteDocument(dvdSelectionne.Id, "dvd");
@@ -1199,7 +1199,7 @@ namespace MediaTekDocuments.view
             }
             else if (colName == "Supprimer")
             {
-                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + revueSelectionne.Titre + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                DialogResult res = MessageBox.Show("Êtes vous sûr de vouloir supprimer " + revueSelectionne.Titre + "?", "Confirmation de suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
                 if (res == DialogResult.Yes)
                 {
                     bool result = controller.DeleteDocument(revueSelectionne.Id, "revue");
@@ -1208,6 +1208,10 @@ namespace MediaTekDocuments.view
                         MessageBox.Show("Impossible de supprimer " + revueSelectionne.Titre + ", il est lié à une commande ou un exemplaire.", "Erreur : suppression impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     RefreshAllLists();
+                }
+                else
+                {
+                    return;
                 }
             }
         }
@@ -1465,5 +1469,799 @@ namespace MediaTekDocuments.view
         }
         #endregion
 
+        #region Onglet Commandes
+        private readonly BindingSource bdgLivreCommande = new BindingSource();
+        private readonly BindingSource bdgDvdCommande = new BindingSource();
+        private List<Suivi> lesSuivis = new List<Suivi>();
+        private List<CommandeDto> lesCommandes = new List<CommandeDto>();
+        private EventHandler _handlerChangeCommitted; // handler pour combo Suivi
+
+        /// <summary>
+        /// Supprime le bouton supprimer et grise la celulle pour les commandes déjà Livrée ou Réglée
+        /// </summary>
+        private void DisableDeleteButtons()
+        {
+            foreach (DataGridViewRow row in dgvCommandeLivre.Rows)
+            {
+                Color color = Color.DarkGray;
+                var idSuivi = row.Cells["IdSuivi"].Value.ToString();
+                if (idSuivi == "00003" || idSuivi == "00004")
+                {
+                    row.Cells["Supprimer"] = new DataGridViewTextBoxCell { Value = "" };
+                    row.Cells["Supprimer"].Style = new DataGridViewCellStyle
+                    {
+                        BackColor = color,
+                        ForeColor = color,
+                        SelectionBackColor = color,
+                        SelectionForeColor = color
+                    };
+                    row.Cells["Supprimer"].ReadOnly = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Vérifie que tous les champs nécessaires sont renseignés
+        /// Retourne true si ok sinon false
+        /// </summary>
+        private bool ValidateEntry(DateTime dateChoisie, string txtMontant, string txtNbEx)
+        {
+            if (!decimal.TryParse(txtMontant, out _)) // Si montant != nombre = false
+            {
+                MessageBox.Show("Le montant doit être un nombre valide.", "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (!int.TryParse(txtNbEx, out _))
+            {
+                MessageBox.Show("Le nombre d'exemplaires doit être un nombre valide.", "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+
+            if (string.IsNullOrWhiteSpace(txtMontant))
+            {
+                MessageBox.Show("Le montant est obligatoire.", "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtNbEx))
+            {
+                MessageBox.Show("Le nombre d'exemplaires est obligatoire.", "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (dateChoisie > DateTime.Today)
+            {
+                MessageBox.Show("La date de commande ne peut pas être supérieure à aujourd'hui.", "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Vide le datagrid
+        /// </summary>
+        private void VideGridView(DataGridView dgv)
+        {
+            dgv.DataSource = null;
+            dgv.Rows.Clear();
+            dgv.Columns.Clear();
+        }
+        #endregion
+
+
+        #region Onglet Commandes Livres
+        /// <summary>
+        /// Clique sur Rechercher   
+        /// récupère le livre et ses commandes puis remplit le datagrid
+        /// Message d'erreur si rien n'est trouvé
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnRechercheLivre_click(object sender, EventArgs e)
+        {
+            string idLivre = txtBoxIdLivreCmd.Text.Trim();
+            if (idLivre == "") return;
+
+            Livre livreRecherche = lesLivres.Find(x => x.Id.Equals(idLivre));
+            if (livreRecherche == null)
+            {
+                MessageBox.Show("numéro introuvable", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                VideLivresInfosCmd();
+                VideGridView(dgvCommandeLivre);
+                groupBox3.Enabled = false;
+                return;
+            }
+            AfficheLivresInfosCmd(livreRecherche);
+
+            lesCommandes = controller.GetAllCompleteCommandes(idLivre);
+            if (lesCommandes.Count == 0)
+            {
+                groupBox3.Enabled = true;
+                return;
+            }
+            groupBox3.Enabled = true;
+            var commandeRecherche = lesCommandes.Where(c => c.IdLivreDvd == idLivre).ToList();
+            remplirLivreCommande(commandeRecherche);
+        }
+
+        /// <summary>
+        /// Se déclenche quand la touche entrer est pressée sur la recherche   
+        /// récupère le livre et ses commandes puis remplit le datagrid
+        /// Message d'erreur si rien n'est trouvé
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void txtBoxIdLivreCmd_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true; // Supprime le son windows
+
+                btnRechercheLivre_click(null, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Recharge le datagrid pour le livre saisi
+        /// garde le tri et les règles d’affichage
+        /// </summary>
+        private void refreshCommandeList()
+        {
+            string idLivre = txtBoxIdLivreCmd.Text.Trim();
+            lesCommandes = controller.GetAllCompleteCommandes(idLivre);
+            if (lesCommandes.Count == 0) return;
+            var commandeRecherche = lesCommandes.Where(c => c.IdLivreDvd == idLivre).ToList();
+            remplirLivreCommande(commandeRecherche);            
+        }
+
+        /// <summary>
+        /// Affiche les infos du livre dans l'onglet Commandes Livres
+        /// </summary>
+        /// <param name="livre"></param>
+        private void AfficheLivresInfosCmd(Livre livre)
+        {
+            txbLivresAuteurCmd.Text = livre.Auteur;
+            txbLivresCollectionCmd.Text = livre.Collection;
+            txbLivresImageCmd.Text = livre.Image;
+            txbLivresIsbnCmd.Text = livre.Isbn;
+            txbLivresGenreCmd.Text = livre.Genre;
+            txbLivresPublicCmd.Text = livre.Public;
+            txbLivresRayonCmd.Text = livre.Rayon;
+            txbLivresTitreCmd.Text = livre.Titre;
+
+            try
+            {
+                pcbLivresImageCmd.Image = Image.FromFile(livre.Image);
+            }
+            catch
+            {
+                pcbLivresImageCmd.Image = null;
+            }
+        }
+
+        /// <summary>
+        /// Vide toutes les informations du livre
+        /// </summary>
+        private void VideLivresInfosCmd()
+        {
+            txtBoxIdLivreCmd.Text = "";
+            txbLivresAuteurCmd.Text = "";
+            txbLivresCollectionCmd.Text = "";
+            txbLivresImageCmd.Text = "";
+            txbLivresIsbnCmd.Text = "";
+            txbLivresGenreCmd.Text = "";
+            txbLivresPublicCmd.Text = "";
+            txbLivresRayonCmd.Text = "";
+            txbLivresTitreCmd.Text = "";
+            pcbLivresImageCmd.Image = null;             
+        }        
+
+        /// <summary>
+        /// Affiche la liste des commandes dans la grille  
+        /// ajoute colonne Suivi + boutons
+        /// </summary>
+        /// <param name="commande"></param>
+        private void remplirLivreCommande(List<CommandeDto> commande)
+        {
+            bdgLivreCommande.DataSource = commande;
+            dgvCommandeLivre.DataSource = bdgLivreCommande;                       
+            dgvCommandeLivre.Columns["DateCommande"].HeaderText = "Date de commande";
+            dgvCommandeLivre.Columns["NbExemplaire"].HeaderText = "Nombre d’exemplaires";
+
+            // colonne combo Suivi
+            if (!dgvCommandeLivre.Columns.Contains("Suivi"))
+            {
+                var colStatut = new DataGridViewComboBoxColumn
+                {
+                    Name = "Suivi",
+                    HeaderText = "Statut",
+                    DataPropertyName = "IdSuivi",
+                    DisplayMember = "Libelle",
+                    ValueMember = "Id",
+                    DataSource = lesSuivis,
+                    SortMode = DataGridViewColumnSortMode.Programmatic
+            };
+                dgvCommandeLivre.Columns.Add(colStatut);
+            }            
+            
+            AjouterBoutons(dgvCommandeLivre);
+            dgvCommandeLivre.Columns["Libelle"].Visible = false;
+            dgvCommandeLivre.Columns["IdLivreDvd"].Visible = false;
+            dgvCommandeLivre.Columns["IdSuivi"].Visible = false;
+            dgvCommandeLivre.Columns["Modifier"].Visible = false;
+
+            // Tout en readonly sauf Suivi
+            foreach (DataGridViewColumn col in dgvCommandeLivre.Columns)
+            {
+                col.ReadOnly = true;
+            }            
+            dgvCommandeLivre.Columns["Suivi"].ReadOnly = false;
+
+            // Bloque les commandes déja réglées
+            foreach (DataGridViewRow row in dgvCommandeLivre.Rows)
+            {                
+                var idSuivi = row.Cells["IdSuivi"].Value?.ToString();
+                if (idSuivi == "00004")
+                {
+                    var cell = (DataGridViewComboBoxCell)row.Cells["Suivi"];
+                    cell.ReadOnly = true;
+                    cell.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing; // Retire la flèche du combo
+                }
+            }
+
+            DisableDeleteButtons();
+            dgvCommandeLivre.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dateCmd.MaxDate = DateTime.Today;
+        }
+
+        /// <summary>
+        /// Récupère la liste des statuts quand on arrive dans l’onglet
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabCommandeLivres_Enter(object sender, EventArgs e)
+        {
+            lesSuivis = controller.GetAllSuivis();
+            groupBox3.Enabled = false;
+            VideGridView(dgvCommandeLivre);
+            VideLivresInfosCmd();
+        }
+
+        /// <summary>
+        /// Gère la colonne suivi
+        /// Construit la liste filtrée
+        /// Ouvre le combo
+        /// Appel l'API quand on clique sur un nouveau statut
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeLivre_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+            if (dgvCommandeLivre.Columns[e.ColumnIndex].Name != "Suivi") return;
+
+            // Cellule édition pour créer le combo
+            if (!dgvCommandeLivre.IsCurrentCellInEditMode)
+            {
+                dgvCommandeLivre.BeginEdit(true);
+            }
+
+            var cmb = dgvCommandeLivre.EditingControl as ComboBox;
+            if (cmb == null) return;
+
+            // Filtre la liste pour la ligne selectionnée
+            CommandeDto commande = (CommandeDto)dgvCommandeLivre.Rows[e.RowIndex].DataBoundItem;
+            string id = commande.IdSuivi;
+            int ordre = lesSuivis.First(s => s.Id == id).Ordre;
+            var liste = lesSuivis.Where(s => s.Id == id || (s.Ordre > ordre && !(s.Id == "00004" && ordre < 3))).ToList();
+
+            // Lie le combo
+            cmb.DataSource = null;
+            cmb.DisplayMember = "Libelle";
+            cmb.ValueMember = "Id";
+            cmb.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmb.DataSource = liste;
+            cmb.SelectedValue = id;
+            
+            cmb.DroppedDown = true;
+
+            // Retire l'ancien handler
+            if (_handlerChangeCommitted != null)
+            {
+                cmb.SelectionChangeCommitted -= _handlerChangeCommitted;
+            }
+
+            _handlerChangeCommitted = (s, ev) =>
+            {
+                ComboBox cb = (ComboBox)s;
+                string nouveau = cb.SelectedValue?.ToString();
+                if (nouveau == null || nouveau == commande.IdSuivi) return;
+
+                var payload = new { id = commande.Id, idSuivi = nouveau };
+
+                dgvCommandeLivre.EndEdit();
+                bool result = controller.addUpdateDocument("commande", payload, false);
+                refreshCommandeList();
+
+                if (!result)
+                {
+                    MessageBox.Show("Mise à jour impossible.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+            cmb.SelectionChangeCommitted += _handlerChangeCommitted;
+        }
+    
+
+        /// <summary>
+        /// Supprime une commande sauf si déja Livrée ou Réglée
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeLivre_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {            
+            if (e.RowIndex < 0 || dgvCommandeLivre.Columns[e.ColumnIndex].Name != "Supprimer") return;
+
+            CommandeDto commande = (CommandeDto)dgvCommandeLivre.Rows[e.RowIndex].DataBoundItem;
+
+            
+            if (commande.IdSuivi == "00003" || commande.IdSuivi == "00004") return;
+
+            DialogResult res = MessageBox.Show($"Êtes vous sûr de vouloir supprimer la commande n°{commande.Id}?", "Confirmation de suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            if (res == DialogResult.OK)
+            {
+                bool result = controller.DeleteDocument(commande.Id, "commande");
+                if(!result)
+                {
+                    MessageBox.Show($"Impossible de supprimer la commande n°{commande.Id}.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                refreshCommandeList();
+            }
+            return;
+        }
+        
+        /// <summary>
+        /// Crée une nouvelle commande pour le livre selectionné
+        /// Passe par une validation des champs
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnSaveLivreCommand_click(object sender, EventArgs e)
+        {
+            if (!ValidateEntry(dateCmd.Value, txtCommandeMontant.Text, txtNbExemplaireCommande.Text)) return;
+
+            var payload = (object)new
+            {
+                dateCommande = dateCmd.Value.Date,
+                montant = txtCommandeMontant.Text,
+                nbExemplaire = txtNbExemplaireCommande.Text,
+                idLivreDvd = txtBoxIdLivreCmd.Text
+            };
+
+            bool result = controller.addUpdateDocument("commande", payload, true);
+            if (!result)
+            {
+                MessageBox.Show($"Erreur lors de l'ajout de la commande.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            refreshCommandeList();
+
+            // On met le focus sur la nouvelle commande            
+            DateTime dCible = dateCmd.Value.Date;
+            string mCible = txtCommandeMontant.Text.Trim();
+            string nCible = txtNbExemplaireCommande.Text.Trim();
+            
+            foreach (DataGridViewRow row in dgvCommandeLivre.Rows)
+            {
+                DateTime d = Convert.ToDateTime(row.Cells["DateCommande"].Value);
+                string m = row.Cells["Montant"].Value?.ToString().Trim();
+                string nb = row.Cells["NbExemplaire"].Value?.ToString().Trim();
+
+                if (d.Date == dCible && m == mCible && nb == nCible)
+                {
+                    dgvCommandeLivre.CurrentCell = row.Cells["Id"];
+                    dgvCommandeLivre.FirstDisplayedScrollingRowIndex = row.Index;
+                    break;
+                }
+            }
+
+            return;
+        }
+
+        /// <summary>
+        /// Tri sur les colonnes du DataGridView commandes livres
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeLivre_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            var sortedList = bdgLivreCommande.DataSource as List<CommandeDto>;
+            if (sortedList == null || sortedList.Count == 0) return;
+            string titreColonne = dgvCommandeLivre.Columns[e.ColumnIndex].Name;
+
+            switch (titreColonne)
+            {
+                case "Id":
+                    sortedList = sortedList.OrderBy(o => o.Id).ToList();
+                    break;
+                case "DateCommande":
+                    sortedList = sortedList.OrderBy(o => o.DateCommande).ToList();
+                    break;
+                case "Montant":
+                    sortedList = sortedList.OrderBy(o => o.Montant).ToList();
+                    break;
+                case "NbExemplaire":
+                    sortedList = sortedList.OrderBy(o => o.NbExemplaire).ToList();
+                    break;
+                case "Suivi":
+                    sortedList = sortedList.OrderBy(o => o.IdSuivi).ToList();
+                    break;
+                default:
+                    return;
+            }
+            bdgLivreCommande.DataSource = sortedList;
+            dgvCommandeLivre.DataSource = bdgLivreCommande;            
+        }
+        #endregion
+
+        #region Onglet Commandes DVDs
+        /// <summary>
+        /// Se déclenche quand la touche entrer est pressée sur la recherche   
+        /// récupère le DVD et ses commandes puis remplit le datagrid
+        /// Message d'erreur si rien n'est trouvé
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void txtBoxIdDvdCmd_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true; // Supprime le son windows
+
+                btnRechercheDvd_Click(null, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Se déclenche quand la touche entrer est pressée sur la recherche   
+        /// récupère le DVD et ses commandes puis remplit le datagrid
+        /// Message d'erreur si rien n'est trouvé
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnRechercheDvd_Click(object sender, EventArgs e)
+        {
+            string idDvd = txtBoxIdDvdCmd.Text.Trim();
+            if (idDvd == "") return;
+
+            Dvd DvdRecherche = lesDvd.Find(x => x.Id.Equals(idDvd));
+            if (DvdRecherche == null)
+            {
+                MessageBox.Show("numéro introuvable", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                VideDvdInfosCmd();
+                VideGridView(dgvCommandeDvd);
+                groupBox6.Enabled = false;
+                return;
+            }
+            AfficheDvdInfosCmd(DvdRecherche);
+
+            lesCommandes = controller.GetAllCompleteCommandes(idDvd);
+            if (lesCommandes.Count == 0)
+            {
+                groupBox6.Enabled = true;
+                return;
+            }
+            groupBox6.Enabled = true;
+            var commandeRecherche = lesCommandes.Where(c => c.IdLivreDvd == idDvd).ToList();
+            remplirDvdCommande(commandeRecherche);
+        }
+
+        /// <summary>
+        /// Affiche les infos du Dvd dans l'onglet Commandes Dvd
+        /// </summary>
+        /// <param name="Dvd"></param>
+        private void AfficheDvdInfosCmd(Dvd dvd)
+        {
+            txbDvdDureeCmd.Text = dvd.Duree.ToString();
+            txbDvdRealCmd.Text = dvd.Realisateur;
+            txbDvdImageCmd.Text = dvd.Image;
+            txbDvdSynopsisCmd.Text = dvd.Synopsis;
+            txbDvdGenreCmd.Text = dvd.Genre;
+            txbDvdPublicCmd.Text = dvd.Public;
+            txbDvdRayonCmd.Text = dvd.Rayon;
+            txbDvdTitreCmd.Text = dvd.Titre;
+
+            try
+            {
+                pcbDvdImageCmd.Image = Image.FromFile(dvd.Image);
+            }
+            catch
+            {
+                pcbDvdImageCmd.Image = null;
+            }
+        }
+
+        /// <summary>
+        /// Vide toutes les informations du Dvd
+        /// </summary>
+        private void VideDvdInfosCmd()
+        {
+            txtBoxIdDvdCmd.Text = "";
+            txbDvdDureeCmd.Text = "";
+            txbDvdRealCmd.Text = "";
+            txbDvdImageCmd.Text = "";
+            txbDvdSynopsisCmd.Text = "";
+            txbDvdGenreCmd.Text = "";
+            txbDvdPublicCmd.Text = "";
+            txbDvdRayonCmd.Text = "";
+            txbDvdTitreCmd.Text = "";
+            pcbDvdImageCmd.Image = null;
+        }
+
+        /// <summary>
+        /// Ouvre l'onglet commande DVD
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabCommandesDVD_Enter(object sender, EventArgs e)
+        {
+            lesDvd = controller.GetAllDvd();
+            VideGridView(dgvCommandeDvd);
+            VideDvdInfosCmd();
+            groupBox6.Enabled = false;
+        }
+
+        /// <summary>
+        /// Affiche la liste des commandes du DVD dans la grille  
+        /// ajoute colonne Suivi + boutons
+        /// </summary>
+        /// <param name="commande"></param>
+        private void remplirDvdCommande(List<CommandeDto> commande)
+        {
+            bdgDvdCommande.DataSource = commande;
+            dgvCommandeDvd.DataSource = bdgDvdCommande;
+            dgvCommandeDvd.Columns["DateCommande"].HeaderText = "Date de commande";
+            dgvCommandeDvd.Columns["NbExemplaire"].HeaderText = "Nombre d’exemplaires";
+
+            // colonne combo Suivi
+            if (!dgvCommandeDvd.Columns.Contains("Suivi"))
+            {
+                var colStatut = new DataGridViewComboBoxColumn
+                {
+                    Name = "Suivi",
+                    HeaderText = "Statut",
+                    DataPropertyName = "IdSuivi",
+                    DisplayMember = "Libelle",
+                    ValueMember = "Id",
+                    DataSource = lesSuivis,
+                    SortMode = DataGridViewColumnSortMode.Programmatic
+                };
+                dgvCommandeDvd.Columns.Add(colStatut);
+            }
+
+            AjouterBoutons(dgvCommandeDvd);
+            dgvCommandeDvd.Columns["Libelle"].Visible = false;
+            dgvCommandeDvd.Columns["IdLivreDvd"].Visible = false;
+            dgvCommandeDvd.Columns["IdSuivi"].Visible = false;
+            dgvCommandeDvd.Columns["Modifier"].Visible = false;
+
+            // Tout en readonly sauf Suivi
+            foreach (DataGridViewColumn col in dgvCommandeDvd.Columns)
+            {
+                col.ReadOnly = true;
+            }
+            dgvCommandeDvd.Columns["Suivi"].ReadOnly = false;
+
+            // Bloque les commandes déja réglées
+            foreach (DataGridViewRow row in dgvCommandeDvd.Rows)
+            {
+                var idSuivi = row.Cells["IdSuivi"].Value?.ToString();
+                if (idSuivi == "00004")
+                {
+                    var cell = (DataGridViewComboBoxCell)row.Cells["Suivi"];
+                    cell.ReadOnly = true;
+                    cell.DisplayStyle = DataGridViewComboBoxDisplayStyle.Nothing; // Retire la flèche du combo
+                }
+            }
+
+            DisableDeleteButtons();
+            dgvCommandeDvd.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dateCmdDvd.MaxDate = DateTime.Today;
+        }
+
+        /// <summary>
+        /// Recharge le datagrid pour le Dvd saisi
+        /// garde le tri et les règles d’affichage
+        /// </summary>
+        private void refreshDvdCommandeList()
+        {
+            string idDvd = txtBoxIdDvdCmd.Text.Trim();
+            lesCommandes = controller.GetAllCompleteCommandes(idDvd);
+            if (lesCommandes.Count == 0) return;
+            var commandeRecherche = lesCommandes.Where(c => c.IdLivreDvd == idDvd).ToList();
+            remplirDvdCommande(commandeRecherche);
+        }
+
+        /// <summary>
+        /// Tri sur les colonnes du DataGridView commandes Dvd
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeDvd_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            var sortedList = bdgDvdCommande.DataSource as List<CommandeDto>;
+            if (sortedList == null || sortedList.Count == 0) return;
+            string titreColonne = dgvCommandeDvd.Columns[e.ColumnIndex].Name;
+
+            switch (titreColonne)
+            {
+                case "Id":
+                    sortedList = sortedList.OrderBy(o => o.Id).ToList();
+                    break;
+                case "DateCommande":
+                    sortedList = sortedList.OrderBy(o => o.DateCommande).ToList();
+                    break;
+                case "Montant":
+                    sortedList = sortedList.OrderBy(o => o.Montant).ToList();
+                    break;
+                case "NbExemplaire":
+                    sortedList = sortedList.OrderBy(o => o.NbExemplaire).ToList();
+                    break;
+                case "Suivi":
+                    sortedList = sortedList.OrderBy(o => o.IdSuivi).ToList();
+                    break;
+                default:
+                    return;
+            }
+            bdgDvdCommande.DataSource = sortedList;
+            dgvCommandeDvd.DataSource = bdgDvdCommande;
+        }
+
+        /// <summary>
+        /// Crée une nouvelle commande pour le Dvd selectionné
+        /// Passe par une validation des champs
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnSaveDvdCommande_Click(object sender, EventArgs e)
+        {           
+                if (!ValidateEntry(dateCmdDvd.Value, txtCommandeMontantDvd.Text, txtNbExemplaireCommandeDvd.Text)) return;
+
+                var payload = (object)new
+                {
+                    dateCommande = dateCmdDvd.Value.Date,
+                    montant = txtCommandeMontantDvd.Text,
+                    nbExemplaire = txtNbExemplaireCommandeDvd.Text,
+                    idLivreDvd = txtBoxIdDvdCmd.Text
+                };
+
+                bool result = controller.addUpdateDocument("commande", payload, true);
+                if (!result)
+                {
+                    MessageBox.Show($"Erreur lors de l'ajout de la commande.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                refreshDvdCommandeList();
+
+                // On met le focus sur la nouvelle commande                
+                DateTime dateFocus = dateCmdDvd.Value.Date;
+                string montantFocus = txtCommandeMontantDvd.Text.Trim();
+                string nbexFocus = txtNbExemplaireCommandeDvd.Text.Trim();
+                
+                foreach (DataGridViewRow row in dgvCommandeDvd.Rows)
+                {
+                    DateTime d = Convert.ToDateTime(row.Cells["DateCommande"].Value);
+                    string m = row.Cells["Montant"].Value?.ToString().Trim();
+                    string nb = row.Cells["NbExemplaire"].Value?.ToString().Trim();
+
+                    if (d.Date == dateFocus && m == montantFocus && nb == nbexFocus)
+                    {
+                        dgvCommandeDvd.CurrentCell = row.Cells["Id"];
+                        dgvCommandeDvd.FirstDisplayedScrollingRowIndex = row.Index;
+                        break;
+                    }
+                }
+
+                return;
+            }
+
+        /// <summary>
+        /// Supprime une commande sauf si déja Livrée ou Réglée
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeDvd_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || dgvCommandeDvd.Columns[e.ColumnIndex].Name != "Supprimer") return;
+
+            CommandeDto commande = (CommandeDto)dgvCommandeDvd.Rows[e.RowIndex].DataBoundItem;
+
+
+            if (commande.IdSuivi == "00003" || commande.IdSuivi == "00004") return;
+
+            DialogResult res = MessageBox.Show($"Êtes vous sûr de vouloir supprimer la commande n°{commande.Id}?", "Confirmation de suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            if (res == DialogResult.OK)
+            {
+                bool result = controller.DeleteDocument(commande.Id, "commande");
+                if (!result)
+                {
+                    MessageBox.Show($"Impossible de supprimer la commande n°{commande.Id}.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                refreshDvdCommandeList();
+            }
+            return;
+        }
+
+        /// <summary>
+        /// Construit la liste filtrée
+        /// Ouvre le combo
+        /// Appel l'API quand on clique sur un nouveau statut
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void dgvCommandeDvd_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+            if (dgvCommandeDvd.Columns[e.ColumnIndex].Name != "Suivi") return;
+
+            // Cellule édition pour créer le combo
+            if (!dgvCommandeDvd.IsCurrentCellInEditMode)
+            {
+                dgvCommandeDvd.BeginEdit(true);
+            }
+
+            var cmb = dgvCommandeDvd.EditingControl as ComboBox;
+            if (cmb == null) return;
+
+            // Filtre la liste pour la ligne selectionnée
+            CommandeDto commande = (CommandeDto)dgvCommandeDvd.Rows[e.RowIndex].DataBoundItem;
+            string id = commande.IdSuivi;
+            int ordre = lesSuivis.First(s => s.Id == id).Ordre;
+            var liste = lesSuivis.Where(s => s.Id == id || (s.Ordre > ordre && !(s.Id == "00004" && ordre < 3))).ToList();
+
+            // Lie le combo
+            cmb.DataSource = null;
+            cmb.DisplayMember = "Libelle";
+            cmb.ValueMember = "Id";
+            cmb.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmb.DataSource = liste;
+            cmb.SelectedValue = id;
+
+            cmb.DroppedDown = true;
+
+            // Retire l'ancien handler
+            if (_handlerChangeCommitted != null)
+            {
+                cmb.SelectionChangeCommitted -= _handlerChangeCommitted;
+            }
+
+            _handlerChangeCommitted = (s, ev) =>
+            {
+                ComboBox cb = (ComboBox)s;
+                string nouveau = cb.SelectedValue?.ToString();
+                if (nouveau == null || nouveau == commande.IdSuivi) return;
+
+                var payload = new { id = commande.Id, idSuivi = nouveau };
+
+                dgvCommandeDvd.EndEdit();
+                bool result = controller.addUpdateDocument("commande", payload, false);
+                refreshDvdCommandeList();
+
+                if (!result)
+                {
+                    MessageBox.Show("Mise à jour impossible.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+            cmb.SelectionChangeCommitted += _handlerChangeCommitted;
+        }
     }
+
+    #endregion
+
+    #region Onglet Commandes Revues
+
+    #endregion
+
+
 }
