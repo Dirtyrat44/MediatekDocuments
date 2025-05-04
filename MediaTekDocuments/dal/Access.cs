@@ -70,7 +70,7 @@ namespace MediaTekDocuments.dal
         /// <returns>instance unique de la classe</returns>
         public static Access GetInstance()
         {
-            if(instance == null)
+            if (instance == null)
             {
                 instance = new Access();
             }
@@ -148,15 +148,25 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// 
         /// Retourne la liste fusionnée de commande et commande document à partir de la BDD
         /// </summary>
         /// <returns>Liste d'objets commandeDto</returns>
         public List<CommandeDto> GetAllCompleteCommandes(string id)
         {
             String jsonId = convertToJson("id", id);
-            List<CommandeDto> lesCommandes = TraitementRecup<CommandeDto>(GET, "commandecomplete/" + jsonId, null);
+            List<CommandeDto> lesCommandes = TraitementRecup<CommandeDto>(GET, "commandedocument/" + jsonId, null);
             return lesCommandes;
+        }
+
+        /// <summary> 
+        /// Retourne la liste fusionnée de commande et abonnement à partir de la BDD
+        /// </summary>
+        /// <returns>Liste d'objets commandeDto</returns>
+        public List<AbonnementDto> GetAllAbonnements(string id)
+        {
+            String jsonId = convertToJson("id", id);
+            List<AbonnementDto> lesAbonnements = TraitementRecup<AbonnementDto>(GET, "abonnement/" + jsonId, null);
+            return lesAbonnements;
         }
 
         /// <summary>
@@ -199,7 +209,7 @@ namespace MediaTekDocuments.dal
         /// <param name="message">information envoyée dans l'url</param>
         /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
-        private List<T> TraitementRecup<T> (String methode, String message, String parametres)
+        private List<T> TraitementRecup<T>(String methode, String message, String parametres)
         {
             // trans
             List<T> liste = new List<T>();
@@ -222,9 +232,10 @@ namespace MediaTekDocuments.dal
                 {
                     Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
                 }
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : "+e.Message);
+                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
                 Environment.Exit(0);
             }
             return liste;
@@ -287,7 +298,7 @@ namespace MediaTekDocuments.dal
             try
             {
                 JObject retour = api.RecupDistant(methode, ressource, parameters);
-                string code = (string)retour["code"];                
+                string code = (string)retour["code"];
                 return code == "200";
             }
             catch (Exception e)
@@ -308,14 +319,14 @@ namespace MediaTekDocuments.dal
         public bool DeleteDocument(string id, string document)
         {
             try
-            {                
+            {
                 string json = JsonConvert.SerializeObject(new { id = id });
                 string parametres = "champs=" + json;
-                
+
                 JObject retour = api.RecupDistant(DELETE, document, parametres);
-                
+
                 string code = (string)retour["code"];
-                return code == "200";                
+                return code == "200";
             }
             catch (Exception e)
             {

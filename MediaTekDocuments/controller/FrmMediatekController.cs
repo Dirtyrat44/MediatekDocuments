@@ -94,12 +94,21 @@ namespace MediaTekDocuments.controller
             return access.GetAllCompleteCommandes(id);
         }
 
-            /// <summary>
-            /// récupère les exemplaires d'une revue
-            /// </summary>
-            /// <param name="idDocuement">id de la revue concernée</param>
-            /// <returns>Liste d'objets Exemplaire</returns>
-            public List<Exemplaire> GetExemplairesRevue(string idDocuement)
+        /// <summary>
+        /// getter sur la liste fusionnée de commande et abonnement
+        /// </summary>
+        /// <returns>Liste d'objets commandes</returns>
+        public List<AbonnementDto> GetAllAbonnements(string id)
+        {
+            return access.GetAllAbonnements(id);
+        }
+
+        /// <summary>
+        /// récupère les exemplaires d'une revue
+        /// </summary>
+        /// <param name="idDocuement">id de la revue concernée</param>
+        /// <returns>Liste d'objets Exemplaire</returns>
+        public List<Exemplaire> GetExemplairesRevue(string idDocuement)
         {
             return access.GetExemplairesRevue(idDocuement);
         }
@@ -119,14 +128,14 @@ namespace MediaTekDocuments.controller
             return access.DeleteDocument(id, document);
         }
 
-            /// <summary>
-            /// Crée ou met à jour un document quel que soit son type.
-            /// </summary>
-            public bool addUpdateDocument(string ressource, object payload, bool isNew)
-            {
-                return access.addUpdateDocument(ressource, payload, isNew);
-            }
-        
+        /// <summary>
+        /// Crée ou met à jour un document quel que soit son type.
+        /// </summary>
+        public bool addUpdateDocument(string ressource, object payload, bool isNew)
+        {
+            return access.addUpdateDocument(ressource, payload, isNew);
+        }
+
 
     }
 }
