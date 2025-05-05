@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Linq;
 using System.Diagnostics;
+using System.Configuration;
 
 namespace MediaTekDocuments.dal
 {
@@ -54,7 +55,14 @@ namespace MediaTekDocuments.dal
             String authenticationString;
             try
             {
-                authenticationString = "admin:adminpwd";
+                string login = ConfigurationManager.AppSettings["ApiLogin"];
+                string password = ConfigurationManager.AppSettings["ApiPassword"];
+                if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
+                {
+                    throw new ConfigurationErrorsException("Login et password manquants");
+                }                   
+
+                authenticationString = $"{login}:{password}";
                 api = ApiRest.GetInstance(uriApi, authenticationString);
             }
             catch (Exception e)

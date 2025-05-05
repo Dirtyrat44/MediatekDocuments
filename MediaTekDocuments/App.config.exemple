@@ -3,8 +3,8 @@
     <configSections>
     </configSections>
 	<appSettings>
-		<add key="ApiLogin"    value="admin" />
-		<add key="ApiPassword" value="adminpwd" />
+		<add key="ApiLogin"    value="your_login" />
+		<add key="ApiPassword" value="your_password" />
 	</appSettings>
     <startup> 
         <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.2" />
