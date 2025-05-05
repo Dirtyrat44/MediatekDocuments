@@ -252,6 +252,7 @@ namespace MediaTekDocuments.view
             this.dgvCommandeDvd = new System.Windows.Forms.DataGridView();
             this.tabCommandeRevue = new System.Windows.Forms.TabPage();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.dateCmdFinAbo = new System.Windows.Forms.DateTimePicker();
             this.txtCommandeMontantRevue = new System.Windows.Forms.TextBox();
             this.dateCmdRevue = new System.Windows.Forms.DateTimePicker();
             this.btnSaveRevueCommande = new System.Windows.Forms.Button();
@@ -280,7 +281,6 @@ namespace MediaTekDocuments.view
             this.txtBoxIdRevueCmd = new System.Windows.Forms.TextBox();
             this.label86 = new System.Windows.Forms.Label();
             this.dgvCommandeRevue = new System.Windows.Forms.DataGridView();
-            this.dateCmdFinAbo = new System.Windows.Forms.DateTimePicker();
             this.tabOngletsApplication.SuspendLayout();
             this.tabLivres.SuspendLayout();
             this.grpLivresInfos.SuspendLayout();
@@ -2683,6 +2683,18 @@ namespace MediaTekDocuments.view
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Abonnement";
             // 
+            // dateCmdFinAbo
+            // 
+            this.dateCmdFinAbo.CustomFormat = "dd-MM-yyyy";
+            this.dateCmdFinAbo.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.dateCmdFinAbo.Location = new System.Drawing.Point(628, 33);
+            this.dateCmdFinAbo.MaxDate = new System.DateTime(8000, 4, 30, 9, 42, 0, 0);
+            this.dateCmdFinAbo.MinDate = new System.DateTime(1950, 1, 1, 0, 0, 0, 0);
+            this.dateCmdFinAbo.Name = "dateCmdFinAbo";
+            this.dateCmdFinAbo.Size = new System.Drawing.Size(92, 20);
+            this.dateCmdFinAbo.TabIndex = 41;
+            this.dateCmdFinAbo.Value = new System.DateTime(2025, 4, 30, 0, 0, 0, 0);
+            // 
             // txtCommandeMontantRevue
             // 
             this.txtCommandeMontantRevue.Location = new System.Drawing.Point(343, 33);
@@ -2982,19 +2994,7 @@ namespace MediaTekDocuments.view
             this.dgvCommandeRevue.Size = new System.Drawing.Size(840, 179);
             this.dgvCommandeRevue.TabIndex = 15;
             this.dgvCommandeRevue.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCommandeRevue_CellContentClick);
-            this.dgvCommandeRevue.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvCommandeRevue_ColumnHeaderMouseClick);            
-            // 
-            // dateCmdFinAbo
-            // 
-            this.dateCmdFinAbo.CustomFormat = "dd-MM-yyyy";
-            this.dateCmdFinAbo.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateCmdFinAbo.Location = new System.Drawing.Point(628, 33);
-            this.dateCmdFinAbo.MaxDate = new System.DateTime(8000, 4, 30, 9, 42, 0, 0);
-            this.dateCmdFinAbo.MinDate = new System.DateTime(1950, 1, 1, 0, 0, 0, 0);
-            this.dateCmdFinAbo.Name = "dateCmdFinAbo";
-            this.dateCmdFinAbo.Size = new System.Drawing.Size(92, 20);
-            this.dateCmdFinAbo.TabIndex = 41;
-            this.dateCmdFinAbo.Value = new System.DateTime(2025, 4, 30, 0, 0, 0, 0);
+            this.dgvCommandeRevue.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dgvCommandeRevue_ColumnHeaderMouseClick);
             // 
             // FrmMediatek
             // 
@@ -3003,6 +3003,7 @@ namespace MediaTekDocuments.view
             this.ClientSize = new System.Drawing.Size(883, 659);
             this.Controls.Add(this.tabOngletsApplication);
             this.Name = "FrmMediatek";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Gestion des documents de la médiathèque";
             this.Load += new System.EventHandler(this.FrmMediatek_Load);
             this.tabOngletsApplication.ResumeLayout(false);

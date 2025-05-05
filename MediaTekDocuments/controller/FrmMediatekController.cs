@@ -123,6 +123,17 @@ namespace MediaTekDocuments.controller
             return access.CreerExemplaire(exemplaire);
         }
 
+        /// <summary>
+        /// Récupère un utilisateur par son login
+        /// </summary>
+        /// <param name="login"></param>
+        /// <param name="pwd"></param>
+        /// <returns></returns>
+        public Utilisateur getUser(string login, string pwd)
+        {
+            return access.getUser(login, pwd);
+        }
+
         public bool DeleteDocument(string id, string document)
         {
             return access.DeleteDocument(id, document);

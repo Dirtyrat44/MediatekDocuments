@@ -33,8 +33,8 @@ namespace MediaTekDocuments.view
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.gBAlerte = new System.Windows.Forms.GroupBox();
-            this.dgvAlerte = new System.Windows.Forms.DataGridView();
             this.btnAlerteOk = new System.Windows.Forms.Button();
+            this.dgvAlerte = new System.Windows.Forms.DataGridView();
             this.revue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DateFinAbonnement = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.gBAlerte.SuspendLayout();
@@ -51,6 +51,17 @@ namespace MediaTekDocuments.view
             this.gBAlerte.TabIndex = 17;
             this.gBAlerte.TabStop = false;
             this.gBAlerte.Text = " Abonnements expirant sous 30 jours";
+            // 
+            // btnAlerteOk
+            // 
+            this.btnAlerteOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAlerteOk.Location = new System.Drawing.Point(411, 171);
+            this.btnAlerteOk.Name = "btnAlerteOk";
+            this.btnAlerteOk.Size = new System.Drawing.Size(75, 23);
+            this.btnAlerteOk.TabIndex = 18;
+            this.btnAlerteOk.Text = "OK";
+            this.btnAlerteOk.UseVisualStyleBackColor = true;
+            this.btnAlerteOk.Click += new System.EventHandler(this.btnAlerteOk_Click);
             // 
             // dgvAlerte
             // 
@@ -80,17 +91,6 @@ namespace MediaTekDocuments.view
             this.dgvAlerte.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvAlerte.Size = new System.Drawing.Size(480, 132);
             this.dgvAlerte.TabIndex = 17;
-            // 
-            // btnAlerteOk
-            // 
-            this.btnAlerteOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAlerteOk.Location = new System.Drawing.Point(411, 171);
-            this.btnAlerteOk.Name = "btnAlerteOk";
-            this.btnAlerteOk.Size = new System.Drawing.Size(75, 23);
-            this.btnAlerteOk.TabIndex = 18;
-            this.btnAlerteOk.Text = "OK";
-            this.btnAlerteOk.UseVisualStyleBackColor = true;
-            this.btnAlerteOk.Click += new System.EventHandler(this.btnAlerteOk_Click);
             // 
             // revue
             // 
@@ -124,6 +124,7 @@ namespace MediaTekDocuments.view
             this.ClientSize = new System.Drawing.Size(534, 231);
             this.Controls.Add(this.gBAlerte);
             this.Name = "FrmAlerteAbonnements";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Abonnements à renouveler";
             this.gBAlerte.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvAlerte)).EndInit();

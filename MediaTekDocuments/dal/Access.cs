@@ -170,6 +170,20 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Récupère un utilisateur par son login
+        /// </summary>
+        /// <param name="login"></param>
+        /// <param name="pwd"></param>
+        /// <returns></returns>
+        public Utilisateur getUser(string login, string pwd)
+        {
+            String jsonBody = convertToJson("login", login);
+            List<Utilisateur> users = TraitementRecup<Utilisateur>(GET, "utilisateur/" + jsonBody, null);
+            Utilisateur user = users.FirstOrDefault();
+            return user;
+        }
+
+        /// <summary>
         /// Retourne les exemplaires d'une revue
         /// </summary>
         /// <param name="idDocument">id de la revue concernée</param>

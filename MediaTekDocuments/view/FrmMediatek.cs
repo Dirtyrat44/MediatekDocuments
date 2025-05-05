@@ -18,22 +18,39 @@ namespace MediaTekDocuments.view
     {
         #region Commun
         private readonly FrmMediatekController controller;
+        private readonly Utilisateur _user;
         private readonly BindingSource bdgGenres = new BindingSource();
         private readonly BindingSource bdgPublics = new BindingSource();
         private readonly BindingSource bdgRayons = new BindingSource();
 
         /// <summary>
+        /// Constructeur vide pour le designer
+        /// </summary>
+        internal FrmMediatek() : this(null)
+        {
+
+        }
+
+        /// <summary>
         /// Constructeur : création du contrôleur lié à ce formulaire
         /// </summary>
-        internal FrmMediatek()
+        internal FrmMediatek(Utilisateur user)
         {
             InitializeComponent();
             this.controller = new FrmMediatekController();
+            this._user = user;
         }
 
+        /// <summary>
+        /// Charge les données initiales et l'alerte si besoin
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FrmMediatek_Load(object sender, EventArgs e)
         {
+            serviceRestriction();
             RefreshAllLists();
+            if (_user.IdService == 3) return;
             Func<string, List<AbonnementDto>> getAbonnements = idRevue => controller.GetAllAbonnements(idRevue);
 
             List<AbonnementAlerteDto> alertes = AbonnementService.GetAlertesAbonnements(lesRevues, getAbonnements);
@@ -42,6 +59,48 @@ namespace MediaTekDocuments.view
             {
                 Form frmAlerte = new FrmAlerteAbonnements(alertes);
                 frmAlerte.ShowDialog(this);
+            }
+        }
+
+        /// <summary>
+        /// Gère les restrictions en fonction du service de l'utilisateur
+        /// </summary>
+        private void serviceRestriction()
+        {            
+            tabCommandes.Enabled = false;
+            tabOngletsApplication.Enabled = false;
+            tabAdd.Enabled = false;
+            
+            switch (_user.IdService)
+            {
+                // Admin
+                case 1:
+                    tabCommandes.Enabled = true;
+                    tabOngletsApplication.Enabled = true;                    
+                    break;
+
+                // Administratif
+                case 2:
+                    tabCommandes.Enabled = true;
+                    tabAdd.Enabled = true;
+                    tabOngletsApplication.Enabled = true;
+                    break;
+
+                // Prêts
+                case 3:
+                    tabCommandes.Enabled = false;
+                    tabAdd.Enabled = false;
+                    tabOngletsApplication.Enabled = true;
+                    tabOngletsApplication.TabPages.Remove(tabAdd);
+                    tabOngletsApplication.TabPages.Remove(tabCommandes);
+                    grpReceptionExemplaire.Enabled = false;
+                    break;
+
+                // Culture
+                case 4:
+                    MessageBox.Show("Votre service n'a pas les droits suffisants pour accéder à cette application.", "Accès refusé", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Application.Exit();
+                    return;
             }
         }
 
@@ -62,40 +121,43 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Ajoute deux colonnes modifier et supprimer à DataGridView,
-        /// si elles n'existent pas déjà.
+        /// Ajoute deux colonnes modifier et supprimer à DataGridView si elles n'existent pas déjà
+        /// Si IdService n'est pas admin ou administratif ne fait rien
         /// </summary>
         public void AjouterBoutons(DataGridView dgv)
         {
-            if (dgv.Columns["Modifier"] == null)
+            if (_user.IdService != 3)
             {
-                DataGridViewButtonColumn btnModifier = new DataGridViewButtonColumn
+                if (dgv.Columns["Modifier"] == null)
                 {
-                    HeaderText = "",
-                    Name = "Modifier",
-                    Text = " Modifier ",
-                    UseColumnTextForButtonValue = true,
-                    SortMode = DataGridViewColumnSortMode.NotSortable
-                };
-                dgv.Columns.Add(btnModifier);
-            }
+                    DataGridViewButtonColumn btnModifier = new DataGridViewButtonColumn
+                    {
+                        HeaderText = "",
+                        Name = "Modifier",
+                        Text = " Modifier ",
+                        UseColumnTextForButtonValue = true,
+                        SortMode = DataGridViewColumnSortMode.NotSortable
+                    };
+                    dgv.Columns.Add(btnModifier);
+                }
 
-            if (dgv.Columns["Supprimer"] == null)
-            {
-                DataGridViewButtonColumn btnSupprimer = new DataGridViewButtonColumn
+                if (dgv.Columns["Supprimer"] == null)
                 {
-                    HeaderText = "",
-                    Name = "Supprimer",
-                    Text = " X ",
-                    UseColumnTextForButtonValue = true,
-                    SortMode = DataGridViewColumnSortMode.NotSortable
-                };
-                dgv.Columns.Add(btnSupprimer);
-            }
+                    DataGridViewButtonColumn btnSupprimer = new DataGridViewButtonColumn
+                    {
+                        HeaderText = "",
+                        Name = "Supprimer",
+                        Text = " X ",
+                        UseColumnTextForButtonValue = true,
+                        SortMode = DataGridViewColumnSortMode.NotSortable
+                    };
+                    dgv.Columns.Add(btnSupprimer);
+                }
 
-            int lastIndex = dgv.Columns.Count - 1;
-            dgv.Columns["Supprimer"].DisplayIndex = lastIndex;
-            dgv.Columns["Modifier"].DisplayIndex = lastIndex - 1;
+                int lastIndex = dgv.Columns.Count - 1;
+                dgv.Columns["Supprimer"].DisplayIndex = lastIndex;
+                dgv.Columns["Modifier"].DisplayIndex = lastIndex - 1;
+            }
         }
 
         /// <summary>
