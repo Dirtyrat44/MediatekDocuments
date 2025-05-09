@@ -720,3 +720,19 @@ function ResizerMouseUp()
     document.removeEventListener("mousemove", ResizerMouseMove);
     document.removeEventListener("mouseup", ResizerMouseUp);
 }
+
+//===============================================================================================================
+// Make the entire top header clickable — back to the root index.html
+document.addEventListener('DOMContentLoaded', function() {
+  var header = document.getElementById('Header') || document.querySelector('.fixedHeader');
+  if (header) {
+    header.style.cursor = 'pointer';
+    header.addEventListener('click', function() {
+      
+      var home = window.location.pathname.indexOf('/html/') !== -1
+        ? '../index.html'
+        : 'index.html';
+      window.location.href = home;
+    });
+  }
+});
