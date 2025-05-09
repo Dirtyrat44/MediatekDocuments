@@ -15,6 +15,12 @@ namespace MediaTekDocuments.model
         public string TitreRevue { get; set; }
         public DateTime DateFinAbonnement { get; set; }
 
+        /// <summary>
+        /// Constructeur de la classe AbonnementAlerteDto
+        /// </summary>
+        /// <param name="idRevue"></param>
+        /// <param name="titreRevue"></param>
+        /// <param name="dateFin"></param>
         public AbonnementAlerteDto(string idRevue, string titreRevue, DateTime dateFin)
         {
             IdRevue = idRevue;

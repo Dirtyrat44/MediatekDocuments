@@ -7,17 +7,23 @@ using System.Threading.Tasks;
 
 namespace MediaTekDocuments.manager
 {
+    /// <summary>
+    /// Classe qui contient les méthodes pour les alertes et validité d'abonnement de revue
+    /// </summary>
     public static class AbonnementService
     {
+        /// <summary>
+        /// Nombre de jours avant la fin d’un abonnement pour déclencher une alerte
+        /// </summary>
         public const int JoursAlerte = 30;
 
         /// <summary>
         /// Retourne vrai si dateParution entre dateCommande et dateFinAbonnement
         /// </summary>
-        /// <param name="dateCommande"></param>
-        /// <param name="dateFinAbonnement"></param>
-        /// <param name="dateParution"></param>
-        /// <returns></returns>
+        /// <param name="dateCommande">Date de la commande</param>
+        /// <param name="dateFinAbonnement">Date de fin de l’abonnement</param>
+        /// <param name="dateParution">Date de parution</param>
+        /// <returns>True si la parution est dans l’abonnement, sinon false</returns>
         public static bool ParutionDansAbonnement(DateTime dateCommande, DateTime dateFinAbonnement, DateTime dateParution)
         {
             return dateParution >= dateCommande && dateParution <= dateFinAbonnement;

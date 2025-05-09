@@ -12,9 +12,15 @@ using MediaTekDocuments.model;
 
 namespace MediaTekDocuments.view
 {
+    /// <summary>
+    /// Formulaire de connexion
+    /// </summary>
     public partial class LoginForm : Form
     {
         private readonly FrmMediatekController controller;
+        /// <summary>
+        /// Utilisateur authentifié après connexion réussie
+        /// </summary>
         public Utilisateur userAuth { get; private set; }
 
         public LoginForm()
@@ -28,6 +34,11 @@ namespace MediaTekDocuments.view
             txtUsername.Focus();
         }
 
+        /// <summary>
+        /// Vérifie les identitifiants et connecte l'utilisateur si valide
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnLogin_Click(object sender, EventArgs e)
         {
             string login = txtUsername.Text;
@@ -74,6 +85,9 @@ namespace MediaTekDocuments.view
             Application.Exit();
         }
 
+        /// <summary>
+        /// Réinitialise les champs de saisie et remet le focus sur le login
+        /// </summary>
         private void clearFields()
         {
             txtPwd.Text = "";

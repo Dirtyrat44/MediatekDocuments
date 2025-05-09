@@ -12,6 +12,9 @@ using MediaTekDocuments.model;
 
 namespace MediaTekDocuments.view
 {
+    /// <summary>
+    /// Formulaire d'ajout ou de modification d'un document
+    /// </summary>
     public partial class FrmDocEdit : Form
     {
         private readonly FrmMediatekController controller;
@@ -21,8 +24,9 @@ namespace MediaTekDocuments.view
         private Document document;
 
         /// <summary>
-        /// Constructeur : création du contrôleur lié à ce formulaire
+        /// Constructeur : Ajout d'un document
         /// </summary>
+        /// <param name="controller"></param>
         internal FrmDocEdit(FrmMediatekController controller)
         {
             InitializeComponent();

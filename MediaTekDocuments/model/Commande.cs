@@ -11,6 +11,12 @@ namespace MediaTekDocuments.model
         public DateTime DateCommande { get; }
         public decimal Montant { get; }
 
+        /// <summary>
+        /// Constructeur de la classe Commande
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dateCommande"></param>
+        /// <param name="montant"></param>
         public Commande(string id, DateTime dateCommande, decimal montant)
         { 
             Id = id;

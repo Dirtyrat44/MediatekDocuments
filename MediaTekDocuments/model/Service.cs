@@ -15,6 +15,11 @@ namespace MediaTekDocuments.model
         
         public string NomService { get; set; }
 
+        /// <summary>
+        /// Constructeur de la classe Service
+        /// </summary>
+        /// <param name="idService"></param>
+        /// <param name="nomService"></param>
         public Service(int idService, string nomService)
         {
             IdService = idService;

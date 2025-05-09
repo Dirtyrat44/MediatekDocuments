@@ -12,8 +12,15 @@ using System.Windows.Forms;
 
 namespace MediaTekDocuments.view
 {
+    /// <summary>
+    /// Formulaire affichant la liste des abonnements qui se termine dans les 30 jours
+    /// </summary>
     public partial class FrmAlerteAbonnements : Form
     {
+        /// <summary>
+        /// Constructeur du formulaire
+        /// </summary>
+        /// <param name="alertes"></param>
         public FrmAlerteAbonnements(List<AbonnementAlerteDto> alertes)
         {
             InitializeComponent();

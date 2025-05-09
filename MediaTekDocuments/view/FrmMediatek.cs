@@ -79,14 +79,14 @@ namespace MediaTekDocuments.view
                 case 2:
                     tabCommandes.Enabled = true;
                     tabOngletsApplication.Enabled = true;
-                    break;  
+                    break;
                 // Prêts
                 case 3:
                     tabCommandes.Enabled = false;
                     tabAdd.Enabled = false;
                     tabOngletsApplication.Enabled = true;
                     tabOngletsApplication.TabPages.Remove(tabAdd);
-                    tabOngletsApplication.TabPages.Remove(tabCommandes);                   
+                    tabOngletsApplication.TabPages.Remove(tabCommandes);
                     break;
 
                 // Culture
@@ -98,7 +98,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Cache les colonnes si mauvais service
+        /// Masque une colonne dans un datagrid si elle existe
         /// </summary>
         /// <param name="dgv"></param>
         /// <param name="columnName"></param>
@@ -130,6 +130,7 @@ namespace MediaTekDocuments.view
         /// Ajoute deux colonnes modifier et supprimer à DataGridView si elles n'existent pas déjà
         /// Si IdService n'est pas admin ou administratif ne fait rien
         /// </summary>
+        /// <param name="dgv"></param>
         public void AjouterBoutons(DataGridView dgv)
         {
             if (_user.IdService != 3)
@@ -186,8 +187,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Intercepte la sélection de l'onglet nouveau document
-        /// Annule la navigation vers l'onglet
+        /// Intercepte la sélection de l'onglet nouveau document et annule la navigation vers l'onglet
         /// Ouvre la fenêtre de création d'un document
         /// Si tout s'est bien passé, rafraîchit la liste
         /// </summary>
@@ -244,7 +244,7 @@ namespace MediaTekDocuments.view
             cmb.DisplayMember = "Libelle";
             cmb.ValueMember = "Id";
             cmb.SelectedIndex = -1;
-        }        
+        }
         #endregion
 
         #region Onglet Livres
@@ -292,6 +292,7 @@ namespace MediaTekDocuments.view
 
         /// <summary>
         /// Rempli le datagrid avec les exemplaires du livres
+        /// Tri les exemplaires par date d'achat
         /// </summary>
         /// <param name="id"></param>
         private void RemplirLivresExemplaires(string id)
@@ -324,13 +325,13 @@ namespace MediaTekDocuments.view
 
             dgvLivreExemplaire.Columns["IdEtat"].Visible = false;
             HideColumn(dgvLivreExemplaire, "Modifier");
-            dgvLivreExemplaire.Columns["Id"].Visible = false;            
+            dgvLivreExemplaire.Columns["Id"].Visible = false;
 
             dgvLivreExemplaire.Columns["DateAchat"].HeaderText = "Date d'achat";
             dgvLivreExemplaire.Columns["Numero"].HeaderText = "N° exemplaire";
             dgvLivreExemplaire.Visible = true;
             dgvLivreExemplaire.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-        }        
+        }
 
         /// <summary>
         /// Recherche et affichage du livre dont on a saisi le numéro.
@@ -395,7 +396,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Affichage des informations du livre sélectionné
+        /// Affichage des informations du livre sélectionné et ses exemplaires
         /// </summary>
         /// <param name="livre">le livre</param>
         private void AfficheLivresInfos(Livre livre)
@@ -674,7 +675,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Tri sur les colonnes
+        /// Tri sur les colonnes des exemplaires
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -700,7 +701,8 @@ namespace MediaTekDocuments.view
             }
 
             // Reconstruit la liste avec le format du grid
-            var afficherListe = sortedList.Select(exemp => new {
+            var afficherListe = sortedList.Select(exemp => new
+            {
                 Id = exemp.Id,
                 Numero = exemp.Numero,
                 IdEtat = exemp.IdEtat,
@@ -709,8 +711,8 @@ namespace MediaTekDocuments.view
             })
             .ToList();
 
-                bdgLivresExemplaires.DataSource = afficherListe;
-                dgvLivreExemplaire.DataSource = bdgLivresExemplaires;
+            bdgLivresExemplaires.DataSource = afficherListe;
+            dgvLivreExemplaire.DataSource = bdgLivresExemplaires;
         }
 
         /// <summary>
@@ -874,8 +876,7 @@ namespace MediaTekDocuments.view
 
         /// <summary>
         /// Boutton pour enregistrer le changement d'état
-        /// </summary>
-        /// </summary>
+        /// </summary>        
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void btnSaveExDvd_Click(object sender, EventArgs e)
@@ -910,7 +911,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Affichage des informations du dvd sélectionné
+        /// Affichage des informations du dvd sélectionné et ses exemplaires
         /// </summary>
         /// <param name="dvd">le dvd</param>
         private void AfficheDvdInfos(Dvd dvd)
@@ -1151,13 +1152,13 @@ namespace MediaTekDocuments.view
             lesExemplairesDvd = controller.GetExemplaires(id);
 
             var sortedList = lesExemplairesDvd.OrderByDescending(e => e.DateAchat).Select(e => new
-                {
-                    Id = e.Id,
-                    Numero = e.Numero,
-                    IdEtat = e.IdEtat,
-                    DateAchat = e.DateAchat.ToShortDateString(),
-                    Etat = lesEtats.Find(et => et.Id == e.IdEtat).Libelle
-                }).ToList();
+            {
+                Id = e.Id,
+                Numero = e.Numero,
+                IdEtat = e.IdEtat,
+                DateAchat = e.DateAchat.ToShortDateString(),
+                Etat = lesEtats.Find(et => et.Id == e.IdEtat).Libelle
+            }).ToList();
 
             if (sortedList.Count == 0)
             {
@@ -1247,7 +1248,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Tri sur les colonnes
+        /// Tri sur les colonnes des exemplaires
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1273,7 +1274,8 @@ namespace MediaTekDocuments.view
             }
 
             // Reconstruit la liste avec le format du grid
-            var afficherListe = sortedList.Select(exemp => new {
+            var afficherListe = sortedList.Select(exemp => new
+            {
                 Id = exemp.Id,
                 Numero = exemp.Numero,
                 IdEtat = exemp.IdEtat,
@@ -1860,7 +1862,7 @@ namespace MediaTekDocuments.view
             string idDocument = txbReceptionRevueNumero.Text;
             lesExemplaires = controller.GetExemplaires(idDocument);
             RemplirReceptionExemplairesListe(lesExemplaires);
-            AccesReceptionExemplaireGroupBox(true);            
+            AccesReceptionExemplaireGroupBox(true);
         }
 
         /// <summary>
@@ -1887,11 +1889,11 @@ namespace MediaTekDocuments.view
             {
                 MessageBox.Show("Échec de la mise à jour de l'état.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
-            } 
-            
+            }
+
             string idRevue = txbReceptionRevueNumero.Text;
             lesExemplaires = controller.GetExemplaires(idRevue);
-            RemplirReceptionExemplairesListe(lesExemplaires);            
+            RemplirReceptionExemplairesListe(lesExemplaires);
         }
 
         /// <summary>
@@ -2032,7 +2034,10 @@ namespace MediaTekDocuments.view
         private List<AbonnementDto> lesAbonnements = new List<AbonnementDto>();
         private List<CommandeDto> lesCommandes = new List<CommandeDto>();
 
-        private EventHandler _handlerChangeCommitted; // handler pour combo Suivi
+        /// <summary>
+        /// handler pour combo Suivi
+        /// </summary>
+        private EventHandler _handlerChangeCommitted;
 
         /// <summary>
         /// Supprime le bouton supprimer et grise la celulle pour les commandes déjà Livrée ou Réglée
@@ -2288,7 +2293,8 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Récupère la liste des statuts quand on arrive dans l’onglet
+        /// Charge la liste des statuts de suivi quand on arrive sur l'onglet
+        /// Désactive le groupbox et vide le datagrid
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2540,7 +2546,7 @@ namespace MediaTekDocuments.view
         /// <summary>
         /// Affiche les infos du Dvd dans l'onglet Commandes Dvd
         /// </summary>
-        /// <param name="Dvd"></param>
+        /// <param name="dvd"></param>
         private void AfficheDvdInfosCmd(Dvd dvd)
         {
             txbDvdDureeCmd.Text = dvd.Duree.ToString();
@@ -2580,7 +2586,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Ouvre l'onglet commande DVD
+        /// Ouvre l'onglet commande DVD vide le datagrid et désactive le groupbox
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2959,7 +2965,7 @@ namespace MediaTekDocuments.view
         /// <summary>
         /// Affiche les infos de la revue dans l'onglet Commandes Revue
         /// </summary>
-        /// <param name="Dvd"></param>
+        /// <param name="revue"></param>
         private void AfficheRevueInfosCmd(Revue revue)
         {
             txbRevueDelaiCmd.Text = revue.DelaiMiseADispo.ToString();
@@ -2984,7 +2990,7 @@ namespace MediaTekDocuments.view
         /// Affiche la liste des abonnements de la revue dans la grille  
         /// ajoute le bouton
         /// </summary>
-        /// <param name="commande"></param>
+        /// <param name="abonnement"></param>
         private void remplirRevueCommande(List<AbonnementDto> abonnement)
         {
             lesAbonnements = abonnement;
@@ -3008,7 +3014,7 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Ouvre l'onglet commande Revue
+        /// Ouvre l'onglet commande Revue, vide le datagrid et désactive le groupbox
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -3072,7 +3078,9 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// 
+        /// Gère le clic du boutton enregistrer
+        /// Enregistre une commande pour la revue selectionnée, valide les champs, envoie à l'API
+        /// Rafraichit le datagrid
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -3179,20 +3187,7 @@ namespace MediaTekDocuments.view
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-        #endregion
-
-        
+        #endregion               
     }
 
 }

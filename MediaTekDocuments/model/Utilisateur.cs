@@ -19,6 +19,13 @@ namespace MediaTekDocuments.model
        
         public int IdService { get; set; }   
         
+        /// <summary>
+        /// Constructeur de la classe Utilisateur
+        /// </summary>
+        /// <param name="idUtilisateur"></param>
+        /// <param name="login"></param>
+        /// <param name="motDePasse"></param>
+        /// <param name="idService"></param>
         public Utilisateur(int idUtilisateur, string login, string motDePasse, int idService)
         {
             IdUtilisateur = idUtilisateur;

@@ -9,6 +9,11 @@ namespace MediaTekDocuments.model
         public string Id { get; set; }
         public string Libelle { get; set; }
 
+        /// <summary>
+        /// Constructeur de la classe Etat
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="libelle"></param>
         public Etat(string id, string libelle)
         {
             this.Id = id;

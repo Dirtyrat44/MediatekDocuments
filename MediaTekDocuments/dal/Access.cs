@@ -164,9 +164,9 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Retourne les différents status suivi
+        /// Retourne les différents status de suivi
         /// </summary>
-        /// <returns>Liste d'objets Revue</returns>
+        /// <returns>Liste d'objets Suivi</returns>
         public List<Suivi> GetAllSuivis()
         {
             List<Suivi> lesSuivis = TraitementRecup<Suivi>(GET, "suivi", null);
@@ -176,7 +176,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Retourne les différents status etat
         /// </summary>
-        /// <returns>Liste d'objets Revue</returns>
+        /// <returns>Liste d'objets Etat</returns>
         public List<Etat> getEtat()
         {
             List<Etat> lesEtats = TraitementRecup<Etat>(GET, "etat", null);
@@ -208,9 +208,8 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// Récupère un utilisateur par son login
         /// </summary>
-        /// <param name="login"></param>
-        /// <param name="pwd"></param>
-        /// <returns></returns>
+        /// <param name="login">Identifiant  de connexion</param>        
+        /// <returns>Utilisateur correspondant ou null</returns>
         public Utilisateur getUser(string login)
         {
             String jsonBody = convertToJson("login", login);
@@ -258,7 +257,7 @@ namespace MediaTekDocuments.dal
         /// <typeparam name="T"></typeparam>
         /// <param name="methode">verbe HTTP (GET, POST, PUT, DELETE)</param>
         /// <param name="message">information envoyée dans l'url</param>
-        /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
+        /// <param name="parametres">paramètres à envoyer dans le body"</param>
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
         private List<T> TraitementRecup<T>(String methode, String message, String parametres)
         {
@@ -337,11 +336,12 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Ajoute ou modifie un document
+        ///  Ajoute ou met à jour une ressource dans la BDD
         /// </summary>
-        /// <param name="doc">L'objet (Livre, dvd, revue)</param>
-        /// <param name="isNew">True = POST, false = PUT</param>
-        /// <returns>Code 200 si true</returns>
+        /// <param name="ressource">Type de ressource</param>
+        /// <param name="doc">Objet à insérer ou modifier</param>
+        /// <param name="isNew">True pour ajouter, false pour modifier</param>
+        /// <returns>True si succès, false sinon</returns>
         public bool addUpdateDocument(string ressource, object doc, bool isNew)
         {
             string json = JsonConvert.SerializeObject(doc);
@@ -363,14 +363,13 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Supprime un document dans la BDD via l'API
-        /// Envoie une requête DELETE avec le champ "id" dans le body 
-        /// True si la suppression marche sinon false
+        /// Supprime une ressource de la BDD
         /// </summary>
-        /// <param name="id">Identifiant du document à supprimer</param>
-        /// <param name="document"></param>
-        /// <returns>True si la suppression marche sinon false</returns>
-        public bool DeleteDocument(string id, string document, string numero = null)
+        /// <param name="id">Id de la ressource à supprimer</param>
+        /// <param name="ressource">Type de ressource</param>
+        /// <param name="numero">Numéro d'exemplaire</param>
+        /// <returns>True si la suppression a réussi sinon false</returns>
+        public bool DeleteDocument(string id, string ressource, string numero = null)
         {
             try
             {
@@ -388,7 +387,7 @@ namespace MediaTekDocuments.dal
                 string json = JsonConvert.SerializeObject(body);
                 string parametres = "champs=" + json;
 
-                JObject retour = api.RecupDistant(DELETE, document, parametres);
+                JObject retour = api.RecupDistant(DELETE, ressource, parametres);
 
                 string code = (string)retour["code"];
                 return code == "200";
@@ -396,7 +395,7 @@ namespace MediaTekDocuments.dal
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
-                Log.Error(e, "Erreur dans DeleteDocument id={Id} doc={Doc} num={Numero}", id, document, numero);
+                Log.Error(e, "Erreur dans DeleteDocument id={Id} doc={Doc} num={Numero}", id, ressource, numero);
                 return false;
             }
         }
