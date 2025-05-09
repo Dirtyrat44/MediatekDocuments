@@ -35,7 +35,7 @@ namespace MediaTekDocuments.view
 
             if (string.IsNullOrEmpty(login))
             {
-                MessageBox.Show("Veuillez renseigner le nom d'utilisateur", "Nom d'utilisateur manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);                
+                MessageBox.Show("Veuillez renseigner le nom d'utilisateur", "Nom d'utilisateur manquant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtUsername.Focus();
                 return;
             }
@@ -47,7 +47,7 @@ namespace MediaTekDocuments.view
                 return;
             }
 
-            Utilisateur user = controller.getUser(login, pwd);
+            Utilisateur user = controller.getUser(login);
 
             if (user == null)
             {

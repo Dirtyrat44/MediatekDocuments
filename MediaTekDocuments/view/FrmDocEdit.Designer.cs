@@ -289,6 +289,7 @@ namespace MediaTekDocuments.view
             this.Controls.Add(this.Enregistrer);
             this.Controls.Add(this.grpBxTitre);
             this.Name = "FrmDocEdit";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Modification d\'un document";
             this.Load += new System.EventHandler(this.FrmDocEdit_Load);
             this.grpBxTitre.ResumeLayout(false);

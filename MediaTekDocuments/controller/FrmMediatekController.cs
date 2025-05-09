@@ -77,6 +77,15 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// Getter sur les etats
+        /// </summary>
+        /// <returns></returns>
+        public List<Etat> getEtat()
+        {
+            return access.getEtat();
+        }
+
+        /// <summary>
         /// getter sur les publics
         /// </summary>
         /// <returns>Liste d'objets Public</returns>
@@ -108,9 +117,9 @@ namespace MediaTekDocuments.controller
         /// </summary>
         /// <param name="idDocuement">id de la revue concernée</param>
         /// <returns>Liste d'objets Exemplaire</returns>
-        public List<Exemplaire> GetExemplairesRevue(string idDocuement)
+        public List<Exemplaire> GetExemplaires(string idDocuement)
         {
-            return access.GetExemplairesRevue(idDocuement);
+            return access.GetExemplaires(idDocuement);
         }
 
         /// <summary>
@@ -126,17 +135,16 @@ namespace MediaTekDocuments.controller
         /// <summary>
         /// Récupère un utilisateur par son login
         /// </summary>
-        /// <param name="login"></param>
-        /// <param name="pwd"></param>
+        /// <param name="login"></param>        
         /// <returns></returns>
-        public Utilisateur getUser(string login, string pwd)
+        public Utilisateur getUser(string login)
         {
-            return access.getUser(login, pwd);
+            return access.getUser(login);
         }
 
-        public bool DeleteDocument(string id, string document)
+        public bool DeleteDocument(string id, string document, string numero = null)
         {
-            return access.DeleteDocument(id, document);
+            return access.DeleteDocument(id, document, numero);
         }
 
         /// <summary>

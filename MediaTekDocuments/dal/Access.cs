@@ -7,8 +7,9 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Linq;
+using Serilog;
+using System.IO;
 using System.Diagnostics;
-using System.Configuration;
 
 namespace MediaTekDocuments.dal
 {
@@ -18,9 +19,24 @@ namespace MediaTekDocuments.dal
     public class Access
     {
         /// <summary>
-        /// adresse de l'API
+        /// Configuration unique de Serilog
         /// </summary>
-        private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
+        static Access()
+        {
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            // On remonte jusqu'à MediatekDocuments
+            var projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", ".."));
+            var logDir = Path.Combine(projectDir, "logs");
+            Directory.CreateDirectory(logDir);
+
+            var logPath = Path.Combine(logDir, "mediatek_access-.log");
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug().WriteTo.File(
+                    path: logPath,
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}").CreateLogger();
+            Log.Information("Journalisation Serilog initialisée pour MediaTekDocuments.Access");
+        }
         /// <summary>
         /// instance unique de la classe
         /// </summary>
@@ -57,10 +73,11 @@ namespace MediaTekDocuments.dal
             {
                 string login = ConfigurationManager.AppSettings["ApiLogin"];
                 string password = ConfigurationManager.AppSettings["ApiPassword"];
+                string uriApi = ConfigurationManager.AppSettings["uriApi"];
                 if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
                 {
                     throw new ConfigurationErrorsException("Login et password manquants");
-                }                   
+                }
 
                 authenticationString = $"{login}:{password}";
                 api = ApiRest.GetInstance(uriApi, authenticationString);
@@ -68,6 +85,7 @@ namespace MediaTekDocuments.dal
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Log.Error(e, "Erreur lors de l'initialisation de l'accès à l'API");
                 Environment.Exit(0);
             }
         }
@@ -156,6 +174,16 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Retourne les différents status etat
+        /// </summary>
+        /// <returns>Liste d'objets Revue</returns>
+        public List<Etat> getEtat()
+        {
+            List<Etat> lesEtats = TraitementRecup<Etat>(GET, "etat", null);
+            return lesEtats;
+        }
+
+        /// <summary>
         /// Retourne la liste fusionnée de commande et commande document à partir de la BDD
         /// </summary>
         /// <returns>Liste d'objets commandeDto</returns>
@@ -183,7 +211,7 @@ namespace MediaTekDocuments.dal
         /// <param name="login"></param>
         /// <param name="pwd"></param>
         /// <returns></returns>
-        public Utilisateur getUser(string login, string pwd)
+        public Utilisateur getUser(string login)
         {
             String jsonBody = convertToJson("login", login);
             List<Utilisateur> users = TraitementRecup<Utilisateur>(GET, "utilisateur/" + jsonBody, null);
@@ -192,11 +220,11 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Retourne les exemplaires d'une revue
+        /// Retourne les exemplaires
         /// </summary>
         /// <param name="idDocument">id de la revue concernée</param>
         /// <returns>Liste d'objets Exemplaire</returns>
-        public List<Exemplaire> GetExemplairesRevue(string idDocument)
+        public List<Exemplaire> GetExemplaires(string idDocument)
         {
             String jsonIdDocument = convertToJson("id", idDocument);
             List<Exemplaire> lesExemplaires = TraitementRecup<Exemplaire>(GET, "exemplaire/" + jsonIdDocument, null);
@@ -219,6 +247,7 @@ namespace MediaTekDocuments.dal
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur lors de la création de l'exemplaire : {Message}", ex.Message);
             }
             return false;
         }
@@ -253,11 +282,13 @@ namespace MediaTekDocuments.dal
                 else
                 {
                     Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
+                    Log.Warning("API renvoie code={Code} message={Msg}", code, (String)retour["message"]);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                Log.Error(e, "Erreur lors de l'accès distant à l'API");
                 Environment.Exit(0);
             }
             return liste;
@@ -326,23 +357,35 @@ namespace MediaTekDocuments.dal
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                Log.Error(e, "Erreur dans addUpdateDocument pour ressource={Ressource}", ressource);
                 return false;
             }
         }
 
         /// <summary>
         /// Supprime un document dans la BDD via l'API
-        /// Envoie une requête DELETE avec le champ "id" dans le body
-        /// </summary>
-        /// <param name="">Identifiant du document à supprimer</param>
-        /// <returns>
+        /// Envoie une requête DELETE avec le champ "id" dans le body 
         /// True si la suppression marche sinon false
-        /// </returns>
-        public bool DeleteDocument(string id, string document)
+        /// </summary>
+        /// <param name="id">Identifiant du document à supprimer</param>
+        /// <param name="document"></param>
+        /// <returns>True si la suppression marche sinon false</returns>
+        public bool DeleteDocument(string id, string document, string numero = null)
         {
             try
             {
-                string json = JsonConvert.SerializeObject(new { id = id });
+                object body;
+
+                if (numero == null)
+                {
+                    body = new { id = id };
+                }
+                else // Exemplaire
+                {
+                    body = new { id = id, numero = numero };
+                }
+
+                string json = JsonConvert.SerializeObject(body);
                 string parametres = "champs=" + json;
 
                 JObject retour = api.RecupDistant(DELETE, document, parametres);
@@ -353,6 +396,7 @@ namespace MediaTekDocuments.dal
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Log.Error(e, "Erreur dans DeleteDocument id={Id} doc={Doc} num={Numero}", id, document, numero);
                 return false;
             }
         }

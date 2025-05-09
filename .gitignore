@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # données de configuration locales
 App.config
+
+# Logs application
+logs/

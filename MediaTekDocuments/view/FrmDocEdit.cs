@@ -24,7 +24,7 @@ namespace MediaTekDocuments.view
         /// Constructeur : création du contrôleur lié à ce formulaire
         /// </summary>
         internal FrmDocEdit(FrmMediatekController controller)
-        {            
+        {
             InitializeComponent();
 
             Enregistrer.Text = "Ajouter";
@@ -67,10 +67,10 @@ namespace MediaTekDocuments.view
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void FrmDocEdit_Load(object sender, EventArgs e)
-        {            
+        {
             List<Categorie> listeGenres = controller.GetAllGenres();
             List<Categorie> listePublics = controller.GetAllPublics();
-            List<Categorie> listeRayons = controller.GetAllRayons();            
+            List<Categorie> listeRayons = controller.GetAllRayons();
 
             RemplirComboCategorie(listeGenres, bdgGenres, cbxGenre);
             RemplirComboCategorie(listePublics, bdgPublics, cbxPublic);
@@ -86,12 +86,12 @@ namespace MediaTekDocuments.view
                 cbxGenre.Text = document.Genre;
                 txtTitre.Text = document.Titre;
                 comboBoxType.Visible = false;
-                lblType.Visible = false;                
+                lblType.Visible = false;
 
                 // Champs spécifique en fonction du type de doc
                 switch (this.document)
                 {
-                    case Livre livre:                        
+                    case Livre livre:
                         lblFirstSpecific.Text = "Code ISBN";
                         lblSecondSpecific.Text = "Auteur(e)";
                         lblThirdSpecific.Text = "Collection";
@@ -129,7 +129,7 @@ namespace MediaTekDocuments.view
                 lblThirdSpecific.Text = "Collection";
                 txtId.ReadOnly = false;
             }
-           
+
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace MediaTekDocuments.view
                     txtFirstSpecific.Text = "";
                     txtSecondSpecific.Text = "";
                     break;
-                default:                    
+                default:
                     return;
             }
         }
@@ -219,7 +219,7 @@ namespace MediaTekDocuments.view
             {
                 MessageBox.Show("Choisissez le rayon.", "Attention",
                                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
+                return false;
             }
             if (cbxPublic.SelectedIndex < 0)
             {
@@ -230,26 +230,20 @@ namespace MediaTekDocuments.view
 
             bool isDvd = (document == null && comboBoxType.SelectedItem?.ToString() == "DVD")
               || document is Dvd;
-            if (isDvd)
+            if (isDvd && !int.TryParse(txtFirstSpecific.Text, out _)) // Si duree != nombre = false
             {
-                if (!int.TryParse(txtFirstSpecific.Text, out _)) // Si duree != nombre = false
-                {
-                    MessageBox.Show("La durée doit être un nombre.", "Attention",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
+                MessageBox.Show("La durée doit être un nombre.", "Attention",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
 
             bool isRevue = (document == null && comboBoxType.SelectedItem?.ToString() == "Revue")
                 || document is Revue;
-            if (isRevue)
+            if (isRevue && !int.TryParse(txtSecondSpecific.Text, out _)) // Si delaiMiseADispo != nombre = false
             {
-                if (!int.TryParse(txtSecondSpecific.Text, out _)) // Si delaiMiseADispo != nombre = false
-                {
-                    MessageBox.Show("Le délai de mise à disposition doit être un nombre.", "Attention",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
+                MessageBox.Show("Le délai de mise à disposition doit être un nombre.", "Attention",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
             }
 
             return true;
@@ -327,9 +321,9 @@ namespace MediaTekDocuments.view
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Enregistrer_Click(object sender, EventArgs e)
-        {            
+        {
             if (!ValidateForm())
-            { 
+            {
                 return;
             }
 

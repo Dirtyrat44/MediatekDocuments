@@ -50,9 +50,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="manager\AbonnementServiceTests.cs" />
+    <Compile Include="model\AbonnementAlerteDtoTests.cs" />
+    <Compile Include="model\AbonnementDtoTests.cs" />
+    <Compile Include="model\CategorieTests.cs" />
+    <Compile Include="model\CommandeDocumentTests.cs" />
+    <Compile Include="model\CommandeDtoTests.cs" />
+    <Compile Include="model\CommandeTests.cs" />
+    <Compile Include="model\DocumentTests.cs" />
+    <Compile Include="model\DvdTests.cs" />
+    <Compile Include="model\EtatTests.cs" />
+    <Compile Include="model\ExemplaireTests.cs" />
+    <Compile Include="model\GenreTests.cs" />
+    <Compile Include="model\LivreDvdTests.cs" />
+    <Compile Include="model\LivreTests.cs" />
+    <Compile Include="model\PublicTests.cs" />
+    <Compile Include="model\RayonTests.cs" />
+    <Compile Include="model\RevueTests.cs" />
+    <Compile Include="model\ServiceTests.cs" />
+    <Compile Include="model\SuiviTests.cs" />
+    <Compile Include="model\UtilisateurTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
