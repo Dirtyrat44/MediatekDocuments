@@ -5,6 +5,9 @@ using System.Windows.Forms;
 
 namespace MediaTekDocuments
 {
+    /// <summary>
+    /// Point d'entrée principal de l'application.
+    /// </summary>
     static class Program
     {
         /// <summary>
